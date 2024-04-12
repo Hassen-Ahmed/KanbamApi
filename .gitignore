@@ -7,6 +7,9 @@ obj/
 *.cache
 *.log
 *.vs
+.env
+*.*.env
+*.env.*
 
 # Build results
 [Dd]ebug/
