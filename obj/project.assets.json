@@ -6149,9 +6149,9 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/mushop/Desktop/Exercise/KanbamApi/..csproj",
-      "projectName": ".",
-      "projectPath": "/home/mushop/Desktop/Exercise/KanbamApi/..csproj",
+      "projectUniqueName": "/home/mushop/Desktop/Exercise/KanbamApi/KanbamApi.csproj",
+      "projectName": "KanbamApi",
+      "projectPath": "/home/mushop/Desktop/Exercise/KanbamApi/KanbamApi.csproj",
       "packagesPath": "/home/mushop/.nuget/packages/",
       "outputPath": "/home/mushop/Desktop/Exercise/KanbamApi/obj/",
       "projectStyle": "PackageReference",

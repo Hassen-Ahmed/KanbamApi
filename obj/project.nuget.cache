@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "quwLn+7b30OVfgBwbaZ50ni07M6xIQ951msNd0hnhiEPcU6QkCQpUjVNLNI5A6hp89hrjpNIQCJgbe/eQoZPLQ==",
+  "dgSpecHash": "Z8nus45nKVe2HHjz2uf1ubwmR+/fyN3QVAmAbqTLzcPtZkr6zYkjHahkOQSw22yJrCU9mvsvAjd/V0yS+BHBGg==",
   "success": true,
-  "projectFilePath": "/home/mushop/Desktop/Exercise/KanbamApi/..csproj",
+  "projectFilePath": "/home/mushop/Desktop/Exercise/KanbamApi/KanbamApi.csproj",
   "expectedPackageFiles": [
     "/home/mushop/.nuget/packages/awssdk.core/3.7.100.14/awssdk.core.3.7.100.14.nupkg.sha512",
     "/home/mushop/.nuget/packages/awssdk.securitytoken/3.7.100.14/awssdk.securitytoken.3.7.100.14.nupkg.sha512",

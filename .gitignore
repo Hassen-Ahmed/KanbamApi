@@ -9,8 +9,6 @@ obj/
 *.vs
 .env
 *.*.env
-*.env.*
-
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
