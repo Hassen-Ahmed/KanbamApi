@@ -1,4 +1,4 @@
-# Kanbam
+# ⭐️ Kanbam ⭐️
 
 Kanbam is a web application inspired by Trello's kanban board, designed to help teams manage projects and tasks effectively.
 
@@ -24,6 +24,7 @@ Kanbam is a web application inspired by Trello's kanban board, designed to help 
   - React.js: A JavaScript library for building user interfaces.
   - TypeScript: A statically typed superset of JavaScript that adds optional static typing.
   - Sass/SCSS: A CSS extension language that adds features like variables, mixins, and nesting.
+  - Chart.js: Is JavaScript library for data visualization.
 
 ## Getting Started
 
@@ -31,11 +32,51 @@ Kanbam is a web application inspired by Trello's kanban board, designed to help 
 
 - Docker installed on your machine.
 - Node.js and npm installed for frontend development.
+- I am using VS Code code editor.
+- You need to download Dotnet SDK based on your system I am using Linux.
+
+#### For installation visit this microsoft link
+
+```js
+https://learn.microsoft.com/en-us/dotnet/core/install/
+```
 
 ### Installation
 
-1. Clone the repository:
+1. Clone the repository Front-End
+
+   ```bash
+   git clone https://github.com/Hassen-Ahmed/Kanbam.git
+   cd kanbam
+   npm install
+   npm run dev
+   ```
+
+2. Clone the repository Back-End
    ```bash
    git clone https://github.com/Hassen-Ahmed/KanbamApi.git
    cd kanbamApi
+   dotnet watch run
    ```
+
+## KanbamApi dotnet packages
+
+- DotNetEnv
+- Microsoft.AspNetCore.Authentication.JwtBearer
+- Microsoft.AspNetCore.OpenApi
+- MongoDB.Driver
+- Swashbuckle.AspNetCore
+
+## Contributing
+
+Contributions are welcome! If you'd like to contribute to Kanbam or KanbamApi, please follow these steps:
+
+- Fork the repository.
+- Create a new branch for your feature or bug fix: git checkout -b feature/my-feature.
+- Commit your changes: git commit -am 'Add new feature'.
+- Push to your branch: git push origin feature/my-feature.
+- Submit a pull request.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE.txt). See the [LICENSE](LICENSE.txt) file for details.
