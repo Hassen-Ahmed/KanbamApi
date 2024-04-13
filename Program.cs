@@ -10,8 +10,11 @@ DotNetEnv.Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+var myDbName = DotNetEnv.Env.GetString("TOKEN_KEY");
+Console.WriteLine($@"my db name ===========> 
+{myDbName}");
 
+// Add services to the container.
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
