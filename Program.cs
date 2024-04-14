@@ -37,7 +37,7 @@ builder.Services.AddCors((options) =>
 
     options.AddPolicy("ProdCors", (corsBuilder) =>
     { 
-        corsBuilder.WithOrigins("https://kanbamapi.onrender.com")
+        corsBuilder.WithOrigins("http://localhost:5173", "https://kanbam.netlify.app/")
         .AllowAnyMethod()
         .AllowAnyHeader()
         .AllowCredentials()
