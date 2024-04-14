@@ -50,16 +50,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
     {
         options.TokenValidationParameters = new()
         {
-            ValidateIssuer = true, // true ==>  later after hosted
-            ValidateAudience = true, // true ==>  later after hosted
+            ValidateIssuer = false, // true ==>  later after hosted
+            ValidateAudience = false, // true ==>  later after hosted
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(
                     DotNetEnv.Env.GetString("TOKEN_KEY")
                 )
             ),
-            ValidIssuer = DotNetEnv.Env.GetString("VALID_ISSUER"), 
-            ValidAudience = DotNetEnv.Env.GetString("VALID_AUDIENCE"),
+            // ValidIssuer = DotNetEnv.Env.GetString("VALID_ISSUER"), 
+            // ValidAudience = DotNetEnv.Env.GetString("VALID_AUDIENCE"),
             
         };
     }

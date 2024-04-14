@@ -49,8 +49,8 @@ public class AuthControllerService : IAuthControllerService
             Expires = DateTime.Now.AddDays(1),
 
             // uncomment after host this API
-            Issuer =  DotNetEnv.Env.GetString("VALID_ISSUER"),
-            Audience = DotNetEnv.Env.GetString("VALID_AUDIENCE"),
+            // Issuer =  DotNetEnv.Env.GetString("VALID_ISSUER"),
+            // Audience = DotNetEnv.Env.GetString("VALID_AUDIENCE"),
         };
 
         JwtSecurityTokenHandler tokenHandler = new();
