@@ -16,8 +16,11 @@ public class ListsService
         await _listsCollection.Find(_ => true).ToListAsync();
 
         public async Task CreateAsync(List newList) {
-        await _listsCollection.InsertOneAsync(newList);
-                }
+                List list = newList;
+                list.IsDragging = false;
+                await _listsCollection.InsertOneAsync(list);
+        }
+        
         public async Task RemoveAsync(string id) =>
         await _listsCollection.DeleteOneAsync(x => x.Id == id);
 }

@@ -12,9 +12,13 @@ public class ListsController : ControllerBase {
     public ListsController(ListsService listsService,CardsService cardsService) {
         _listsService = listsService;
         _cardsService = cardsService;
+
+        //   _mapper = new Mapper(new MapperConfiguration(
+        //     cfg => cfg.CreateMap<UserRegistration, UserComplete>()
+        // ));
     }
 
-   [HttpGet]
+    [HttpGet]
     public async Task<List<List>> Get() =>
         await _listsService.GetAsync();
 
