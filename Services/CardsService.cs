@@ -12,14 +12,19 @@ public class CardsService
          _cardsCollection = kanbamDbRepository.kanbamDatabase.GetCollection<Card>(DotNetEnv.Env.GetString("CARDS_COLLECTION_NAME"));
     }
 
-     public async Task<List<Card>> GetAsync() =>
-        await _cardsCollection.FindSync(_ => true).ToListAsync();
+   //   public async Task<List<Card>> GetAsync() =>
+   //      await _cardsCollection.FindSync(_ => true).ToListAsync();
 
-     public async Task<Card?> GetAsync(string id) =>
-        await _cardsCollection.FindSync(x => x.Id == id).FirstOrDefaultAsync();
+     public async Task<List<Card>> GetByListIdAsync(string listId) =>
+        await _cardsCollection.FindSync(x => x.ListId == listId).ToListAsync();
+
+     public async Task<List<Card>> GetByCardIdAsync(string listId) =>
+        await _cardsCollection.FindSync(x => x.ListId == listId).ToListAsync();
 
      public async Task CreateAsync(Card newCard) {
-        await _cardsCollection.InsertOneAsync(newCard);
+         Card card = newCard;
+         card.IsDragging = false;
+         await _cardsCollection.InsertOneAsync(card);
      }
 
      public async Task UpdateAsync(string id, Card updatedCard) =>
