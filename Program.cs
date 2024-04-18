@@ -73,7 +73,6 @@ var app = builder.Build();
         // Check if user-agent contains Chrome, Firefox or Safari
         if (userAgent.Contains("Chrome") || userAgent.Contains("Firefox") || userAgent.Contains("Safari"))
         {    
-            Console.WriteLine($"userAgent ====>> {userAgent}");
             // Allow request to proceed
             await next(); 
         }
