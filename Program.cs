@@ -37,7 +37,7 @@ builder.Services.AddCors((options) =>
 
     options.AddPolicy("ProdCors", (corsBuilder) =>
     { 
-        corsBuilder.WithOrigins( "https://kanbam.netlify.app")
+        corsBuilder.WithOrigins( "https://kanbam.netlify.app","http://localhost:5173")
         .AllowAnyMethod()
         .AllowAnyHeader()
         .AllowCredentials()
@@ -70,8 +70,7 @@ var app = builder.Build();
   app.Use(async (context, next) =>
     {
         string userAgent = context.Request.Headers["User-Agent"].ToString();
-    
-        // Check if user-agent contains Chrome or Firefox
+        // Check if user-agent contains Chrome, Firefox or Safari
         if (userAgent.Contains("Chrome") || userAgent.Contains("Firefox") || userAgent.Contains("Safari"))
         {    
             Console.WriteLine($"userAgent ====>> {userAgent}");
@@ -80,7 +79,8 @@ var app = builder.Build();
         }
         else
         {
-            context.Response.StatusCode = 403; // Forbidden
+            // Forbidden
+            context.Response.StatusCode = 403; 
         }
     });
 
