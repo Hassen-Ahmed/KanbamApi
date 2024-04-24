@@ -22,9 +22,7 @@ public class CardsService
         await _cardsCollection.FindSync(x => x.ListId == listId).ToListAsync();
 
      public async Task CreateAsync(Card newCard) {
-         Card card = newCard;
-         card.IsDragging = false;
-         await _cardsCollection.InsertOneAsync(card);
+         await _cardsCollection.InsertOneAsync(newCard);
      }
 
      public async Task UpdateAsync(string id, Card updatedCard) =>

@@ -9,7 +9,7 @@ public class List {
     public  string? Id { get; set;}
     public string? Title { get; set;} 
     public int IndexNumber { get; set;}
-    public Boolean? IsDragging { get; set; }
+    // public Boolean? IsDragging { get; set; }
     
 }
 

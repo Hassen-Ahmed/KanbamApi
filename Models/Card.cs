@@ -10,5 +10,5 @@ public class Card {
     public string? ListId { get; set;} = null!;
     public int IndexNumber { get; set;}
     public string? Title { get; set;} = "";
-    public Boolean? IsDragging { get; set; } 
+    // public Boolean? IsDragging { get; set; } 
 }
