@@ -67,21 +67,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 
 var app = builder.Build();
 
-  app.Use(async (context, next) =>
-    {
-        string userAgent = context.Request.Headers["User-Agent"].ToString();
-        // Check if user-agent contains Chrome, Firefox or Safari
-        if (userAgent.Contains("Chrome") || userAgent.Contains("Firefox") || userAgent.Contains("Safari"))
-        {    
-            // Allow request to proceed
-            await next(); 
-        }
-        else
-        {
-            // Forbidden
-            context.Response.StatusCode = 403; 
-        }
-    });
+//   app.Use(async (context, next) =>
+//     {
+//         string userAgent = context.Request.Headers["User-Agent"].ToString();
+//         // Check if user-agent contains Chrome, Firefox or Safari
+//         if (userAgent.Contains("Chrome") || userAgent.Contains("Firefox") || userAgent.Contains("Safari"))
+//         {    
+//             // Allow request to proceed
+//             await next(); 
+//         }
+//         else
+//         {
+//             // Forbidden
+//             context.Response.StatusCode = 403; 
+//         }
+//     });
 
 
 // Configure the HTTP request pipeline.
