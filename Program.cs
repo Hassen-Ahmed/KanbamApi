@@ -3,6 +3,7 @@ using KanbamApi.Repo;
 using KanbamApi.Services;
 using KanbamApi.Services.AuthServices;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.IdentityModel.Tokens;
 
 // load .env file variables
@@ -64,6 +65,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
         };
     }
 );
+
+if(OperatingSystem.IsWindows()) {
+    builder.Services.AddDataProtection().ProtectKeysWithDpapi();
+}
+
+
 
 var app = builder.Build();
 
