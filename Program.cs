@@ -66,9 +66,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
     }
 );
 
-if(OperatingSystem.IsWindows()) {
-    builder.Services.AddDataProtection().ProtectKeysWithDpapi();
-}
+// if(OperatingSystem.IsWindows()) {
+//     builder.Services.AddDataProtection().ProtectKeysWithDpapi();
+// }
 
 
 
