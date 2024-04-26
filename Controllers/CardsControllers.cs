@@ -1,5 +1,6 @@
 using KanbamApi.Models;
 using KanbamApi.Services;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KanbamApi.Controllers;
@@ -19,10 +20,17 @@ private readonly CardsService _cardsService;
     public async Task<List<Card>> GetByCardId(string cardId) =>
         await _cardsService.GetByCardIdAsync(cardId);
     
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateCard(string id ,Card updatedCard) {
+            await _cardsService.UpdateAsync(id, updatedCard);
+             return CreatedAtAction(nameof(UpdateCard), new { id = updatedCard.Id }, updatedCard);
+    }
+
     [HttpPost]
-    public async Task<IActionResult> Post(Card newCard)
+    public async Task<IActionResult> CreateNewCard(Card newCard)
     {
         await _cardsService.CreateAsync(newCard);
+        // instead of null put  nameOf(CreateNewCard),
         return CreatedAtAction(null, new { id = newCard.Id }, newCard);
     }
 
