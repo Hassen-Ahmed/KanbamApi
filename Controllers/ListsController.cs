@@ -23,10 +23,16 @@ public class ListsController : ControllerBase {
         await _listsService.GetAsync();
 
     [HttpPost]
-    public async Task<IActionResult> Post(List newList) {
+    public async Task<IActionResult> CreateList(List newList) {
         await _listsService.CreateAsync(newList);
-        return CreatedAtAction(nameof(Get), new { id = newList.Id }, newList);
+        return CreatedAtAction(nameof(CreateList), new { id = newList.Id }, newList);
     } 
+    
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateList(string id ,List updatedList) {
+            await _listsService.UpdateAsync(id, updatedList);
+            return CreatedAtAction(nameof(UpdateList), new { id = updatedList.Id }, updatedList);
+    }
 
     [HttpDelete]
     public async Task<IActionResult> Delete(string listId) {

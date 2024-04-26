@@ -18,7 +18,9 @@ public class ListsService
         public async Task CreateAsync(List newList) {
                 await _listsCollection.InsertOneAsync(newList);
         }
-        
+        public async Task UpdateAsync(string id, List updatedList) =>
+                await _listsCollection.ReplaceOneAsync(x => x.Id == id, updatedList);
+
         public async Task RemoveAsync(string id) =>
         await _listsCollection.DeleteOneAsync(x => x.Id == id);
 }
