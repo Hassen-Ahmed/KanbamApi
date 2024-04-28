@@ -34,8 +34,8 @@ public class ListsController : ControllerBase {
             return CreatedAtAction(nameof(UpdateList), new { id = updatedList.Id }, updatedList);
     }
 
-    [HttpDelete]
-    public async Task<IActionResult> Delete(string listId) {
+    [HttpDelete("{listId}")]
+    public async Task<IActionResult> RemoveList(string listId) {
 
         await _listsService.RemoveAsync(listId);
         await _cardsService.RemoveManyByListIdAsync(listId);
