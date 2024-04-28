@@ -20,18 +20,27 @@ private readonly CardsService _cardsService;
     public async Task<List<Card>> GetByCardId(string cardId) =>
         await _cardsService.GetByCardIdAsync(cardId);
     
+
+    [HttpPost]
+    public async Task<IActionResult> CreateNewCard(Card newCard)
+    {
+        await _cardsService.CreateAsync(newCard);
+        return CreatedAtAction(nameof(CreateNewCard), new { id = newCard.Id }, newCard);
+    }
+
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateCard(string id ,Card updatedCard) {
             await _cardsService.UpdateAsync(id, updatedCard);
              return CreatedAtAction(nameof(UpdateCard), new { id = updatedCard.Id }, updatedCard);
     }
 
-    [HttpPost]
-    public async Task<IActionResult> CreateNewCard(Card newCard)
-    {
-        await _cardsService.CreateAsync(newCard);
-        // instead of null put  nameOf(CreateNewCard),
-        return CreatedAtAction(null, new { id = newCard.Id }, newCard);
+    [HttpDelete("{cardId}")]
+     public async Task<IActionResult> RemoveList(string cardId) {
+
+        await _cardsService.RemoveAsync(cardId);
+        
+        return NoContent();
     }
+
 
 }
