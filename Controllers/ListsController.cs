@@ -44,6 +44,7 @@ public class ListsController : ControllerBase {
         {    
             var userId = User.FindFirst("userId")?.Value;
             newList.UserId = userId;
+            newList.Cards = [];
             await _listsService.CreateAsync(newList);
             return CreatedAtAction(nameof(CreateList), new { id = newList.Id }, newList);
           }
