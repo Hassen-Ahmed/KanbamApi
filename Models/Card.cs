@@ -1,14 +1,19 @@
+using System.Text.Json.Serialization;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace KanbamApi.Models;
 
 public class Card {
+   
+
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string? Id { get; set; }
-    public string? ListId { get; set;} = null!;
+    [BsonRepresentation(BsonType.ObjectId)]
+    public string? ListId { get; set;} 
+    [BsonElement("IndexNumber")] 
     public int IndexNumber { get; set;}
-    public string? Title { get; set;} = "";
-    // public Boolean? IsDragging { get; set; } 
+    [BsonElement("Title")]
+    public string? Title { get; set;} 
 }
