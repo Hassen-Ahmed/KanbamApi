@@ -62,9 +62,20 @@ private readonly IAuthControllerService _authControllerService;
 
         var isUserCreated = await _usersService.CreateNewUserAsync(newUser);
         var isAuthCreated = await _authService.CreateAsync(authEntity);
+        
+       var succefulRegistration = new Dictionary<string, object>
+                {
+                    { "message", "Registration successful" },
+                    { "user", new Dictionary<string, string>
+                        {
+                            { "username",authEntity.Email! },
+                            { "email", authEntity.Email! }
+                        }
+                    }
+                };
 
-        if (isUserCreated && isAuthCreated) 
-            return CreatedAtAction(nameof(Get), new { id = authEntity.Email }, authEntity.Email);
+        if (isUserCreated && isAuthCreated)
+            return CreatedAtAction(nameof(Get), new { id = authEntity.Email },succefulRegistration );
         
         throw new Exception("Something wrong with Creating new User!");
         
