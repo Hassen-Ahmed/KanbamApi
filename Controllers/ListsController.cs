@@ -58,6 +58,10 @@ public class ListsController : ControllerBase {
     public async Task<IActionResult> UpdateList(string id ,List updatedList) {
         try
         {
+            var userId = User.FindFirst("userId")?.Value;
+            updatedList.Id = id;
+            updatedList.UserId = userId;
+
             await _listsService.UpdateAsync(id, updatedList);
             return CreatedAtAction(nameof(UpdateList), new { id = updatedList.Id }, updatedList);
         }
