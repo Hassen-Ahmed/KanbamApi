@@ -74,6 +74,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 
 var app = builder.Build();
 
+// Allow certain browsers
 //   app.Use(async (context, next) =>
 //     {
 //         string userAgent = context.Request.Headers["User-Agent"].ToString();
@@ -90,6 +91,12 @@ var app = builder.Build();
 //         }
 //     });
 
+// Add Content Security Policy (CSP)
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.Append("Content-Security-Policy", "default-src 'self'");
+    await next();
+});
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
