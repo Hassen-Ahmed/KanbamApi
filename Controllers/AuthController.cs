@@ -13,7 +13,7 @@ namespace KanbamApi.Controllers;
 [Route("api/[controller]")]
 public class AuthController : ControllerBase {
 private readonly AuthService _authService;
-private readonly UsersService _usersService;
+private readonly UsersService   _usersService;
 private readonly IAuthControllerService _authControllerService;
 
     public AuthController(AuthService authService, IAuthControllerService authControllerService, UsersService usersService){
@@ -64,7 +64,7 @@ private readonly IAuthControllerService _authControllerService;
         var isAuthCreated = await _authService.CreateAsync(authEntity);
 
         if (isUserCreated && isAuthCreated) 
-            return CreatedAtAction(nameof(Get), new { id = authEntity.Email }, authEntity);
+            return CreatedAtAction(nameof(Get), new { id = authEntity.Email }, authEntity.Email);
         
         throw new Exception("Something wrong with Creating new User!");
         
