@@ -16,6 +16,10 @@ public class List {
     public int IndexNumber { get; set; }
     [BsonElement("Cards")] 
     public List<Card>? Cards { get; set; }
+
+     public List() {
+        Cards ??= [];
+    }
     
 }
 
