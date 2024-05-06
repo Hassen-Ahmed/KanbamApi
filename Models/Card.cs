@@ -15,5 +15,13 @@ public class Card {
     [BsonElement("IndexNumber")] 
     public int IndexNumber { get; set;}
     [BsonElement("Title")]
-    public string? Title { get; set;} 
+    public string? Title { get; set;}  
+    [BsonElement("Description")]
+    public string? Description { get; set;} 
+    [BsonElement("Comments")]
+    public List<string>? Comments { get; set; }
+
+    public Card() {
+        Comments ??= [];
+    }
 }
