@@ -17,6 +17,8 @@ public class Card {
     [BsonElement("Title")]
     public string? Title { get; set;}  
     [BsonElement("Description")]
+    public string? Priority { get; set;}  
+    [BsonElement("Priority")]
     public string? Description { get; set;} 
     [BsonElement("Comments")]
     public List<string>? Comments { get; set; }
