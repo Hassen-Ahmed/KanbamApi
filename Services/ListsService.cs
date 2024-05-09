@@ -21,40 +21,51 @@ public class ListsService
 
         }
 
-        public async Task<List<List>> GetAsync() =>
-                await _listsCollection.Find(_ => true).ToListAsync();
-
         public async Task<List<List>> GetListsWithCardsByUserId(string userId)
         {
-                if (userId is null)
-                        return new List<List>();
-
-                var pipeline = new[]
+                 if (string.IsNullOrEmpty(userId))
                 {
-                        PipelineStageDefinitionBuilder.Match<List>(x => x.UserId == userId),
-                        PipelineStageDefinitionBuilder.Lookup<List, Card, List>(
-                                _cardsCollection,
-                                x => x.Id,
-                                c => c.ListId,
-                                listWithCards => listWithCards.Cards
-                        )
-                };      
+                        throw new ArgumentNullException(nameof(userId), "User ID cannot be null or empty.");
+                }
 
-                var cursor = await _listsCollection.AggregateAsync<List>(pipeline);
-                return await cursor.ToListAsync();
+                try
+                {
+                        var filter = Builders<List>.Filter.Eq(x => x.UserId, userId);
+
+                        var lookupStage = PipelineStageDefinitionBuilder.Lookup<List, Card, List>(
+                        _cardsCollection,
+                        x => x.Id,
+                        c => c.ListId,
+                        listWithCards => listWithCards.Cards
+                        );
+
+                        var pipeline = new[] { PipelineStageDefinitionBuilder.Match(filter), lookupStage };
+
+                        var cursor = await _listsCollection.AggregateAsync<List>(pipeline);
+                        return await cursor.ToListAsync();
+                                
+                }
+
+                catch (Exception ex)
+                {
+                        throw new ApplicationException("An error occurred while retrieving lists with cards.", ex);
+                }
         }
         
-
-       
       
         public async Task CreateAsync(List newList) {
                 await _listsCollection.InsertOneAsync(newList);
         }
         
-        public async Task UpdateAsync(string id, List updatedList) =>
-                await _listsCollection.ReplaceOneAsync(x => x.Id == id, updatedList);
+        public async Task UpdateAsync(string id, List updatedList)  {
+                var filter = Builders<List>.Filter.Eq("_id", id);
+                await _listsCollection.ReplaceOneAsync(filter, updatedList);
+        }
 
-        public async Task RemoveAsync(string id) =>
-        await _listsCollection.DeleteOneAsync(x => x.Id == id);
+        public async Task RemoveAsync(string id) {
 
+                var filter = Builders<List>.Filter.Eq("_id", id);
+                await _listsCollection.DeleteOneAsync(filter);
+
+        }
 }
