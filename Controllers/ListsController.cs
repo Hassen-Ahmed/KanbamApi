@@ -31,9 +31,9 @@ public class ListsController : ControllerBase {
                 var res = await _listsService.GetListsWithCardsByUserId(userId!);
                 return Ok(res);
             }
-            catch (System.Exception)
+            catch (Exception)
             {
-                throw;
+                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while processing the request.");
             }
     }
 
@@ -48,9 +48,9 @@ public class ListsController : ControllerBase {
             await _listsService.CreateAsync(newList);
             return CreatedAtAction(nameof(CreateList), new { id = newList.Id }, newList);
           }
-        catch (System.Exception)
+        catch (Exception)
         {
-            throw;
+             return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while processing the request.");
         }
     } 
     
@@ -66,10 +66,10 @@ public class ListsController : ControllerBase {
             await _listsService.UpdateAsync(id, updatedList);
             return CreatedAtAction(nameof(UpdateList), new { id = updatedList.Id }, updatedList);
         }
-        catch (System.Exception)
+        catch (Exception)
         {
             
-            throw;
+             return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while processing the request.");
         }
     }
 
@@ -84,9 +84,9 @@ public class ListsController : ControllerBase {
             
             return NoContent(); 
         }
-        catch (System.Exception)
+        catch (Exception)
         {
-            throw;
+             return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while processing the request.");
         }
     }
 }
