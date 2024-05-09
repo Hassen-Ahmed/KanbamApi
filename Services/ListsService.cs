@@ -23,33 +23,23 @@ public class ListsService
 
         public async Task<List<List>> GetListsWithCardsByUserId(string userId)
         {
-                 if (string.IsNullOrEmpty(userId))
-                {
+                if (string.IsNullOrEmpty(userId)) {
                         throw new ArgumentNullException(nameof(userId), "User ID cannot be null or empty.");
                 }
 
-                try
-                {
-                        var filter = Builders<List>.Filter.Eq(x => x.UserId, userId);
+                var filter = Builders<List>.Filter.Eq(x => x.UserId, userId);
 
-                        var lookupStage = PipelineStageDefinitionBuilder.Lookup<List, Card, List>(
-                        _cardsCollection,
-                        x => x.Id,
-                        c => c.ListId,
-                        listWithCards => listWithCards.Cards
-                        );
+                var lookupStage = PipelineStageDefinitionBuilder.Lookup<List, Card, List>(
+                _cardsCollection,
+                x => x.Id,
+                c => c.ListId,
+                listWithCards => listWithCards.Cards
+                );
 
-                        var pipeline = new[] { PipelineStageDefinitionBuilder.Match(filter), lookupStage };
+                var pipeline = new[] { PipelineStageDefinitionBuilder.Match(filter), lookupStage };
 
-                        var cursor = await _listsCollection.AggregateAsync<List>(pipeline);
-                        return await cursor.ToListAsync();
-                                
-                }
-
-                catch (Exception ex)
-                {
-                        throw new ApplicationException("An error occurred while retrieving lists with cards.", ex);
-                }
+                var cursor = await _listsCollection.AggregateAsync<List>(pipeline);
+                return await cursor.ToListAsync();
         }
         
       
@@ -58,13 +48,13 @@ public class ListsService
         }
         
         public async Task UpdateAsync(string id, List updatedList)  {
-                var filter = Builders<List>.Filter.Eq("_id", id);
+                var filter = Builders<List>.Filter.Eq(l => l.Id, id);
                 await _listsCollection.ReplaceOneAsync(filter, updatedList);
         }
 
         public async Task RemoveAsync(string id) {
 
-                var filter = Builders<List>.Filter.Eq("_id", id);
+                var filter = Builders<List>.Filter.Eq(l => l.Id, id);
                 await _listsCollection.DeleteOneAsync(filter);
 
         }

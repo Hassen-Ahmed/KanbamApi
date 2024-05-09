@@ -13,15 +13,15 @@ public class UsersService
          _usersCollection = kanbamDbRepository.kanbamDatabase.GetCollection<User>(DotNetEnv.Env.GetString("USERS_COLLECTION_NAME"));
     }
 
-    public async Task<List<User>> GetAllUserAsync() =>
-        await _usersCollection.Find(_ => true).ToListAsync();
 
     public async Task<string> GetUserIdAsync(string? email) {
-        var res =  await _usersCollection.Find(x => x.Email == email).FirstOrDefaultAsync();
+        var filter = Builders<User>.Filter.Eq(u => u.Email, email);
+        var res =  await _usersCollection.Find(filter).FirstOrDefaultAsync();
         var userId = res.Id;
+        
         return userId is not null ? userId : "";
-       
     }
+    
     public async Task<bool> CreateNewUserAsync(User newUser)  {
         await _usersCollection.InsertOneAsync(newUser);
 
