@@ -25,29 +25,42 @@ builder.Services.AddSingleton<KanbamDbRepository>();
 
 builder.Services.AddControllers();
 
-builder.Services.AddCors((options) =>
-{
-    options.AddPolicy("DevCors", (corsBuilder) =>
-    { 
-        corsBuilder.WithOrigins("http://localhost:5173", "http://localhost:3000", "http://localhost:8000")
-        .AllowAnyMethod()
-        .AllowAnyHeader()
-        .AllowCredentials()
-        ;
-    });
+builder.Services.AddCors(
+    (options) =>
+    {
+        options.AddPolicy(
+            "DevCors",
+            (corsBuilder) =>
+            {
+                corsBuilder
+                    .WithOrigins(
+                        "http://localhost:5173",
+                        "http://localhost:3000",
+                        "http://localhost:8000"
+                    )
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .AllowCredentials();
+            }
+        );
 
-    options.AddPolicy("ProdCors", (corsBuilder) =>
-    { 
-        corsBuilder.WithOrigins( "https://kanbam.netlify.app","http://localhost:5173") // vite localHost address
-        .AllowAnyMethod()
-        .AllowAnyHeader()
-        .AllowCredentials()
-        ;
-    });
-});
+        options.AddPolicy(
+            "ProdCors",
+            (corsBuilder) =>
+            {
+                corsBuilder
+                    .WithOrigins("https://kanbam.netlify.app", "http://localhost:5173") // vite localHost address
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .AllowCredentials();
+            }
+        );
+    }
+);
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(
-    options =>
+builder
+    .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new()
         {
@@ -55,16 +68,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
             ValidateAudience = false, // true ==>  later after hosted
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(
-                    DotNetEnv.Env.GetString("TOKEN_KEY")
-                )
+                Encoding.UTF8.GetBytes(DotNetEnv.Env.GetString("TOKEN_KEY"))
             ),
-            // ValidIssuer = DotNetEnv.Env.GetString("VALID_ISSUER"), 
+            // ValidIssuer = DotNetEnv.Env.GetString("VALID_ISSUER"),
             // ValidAudience = DotNetEnv.Env.GetString("VALID_AUDIENCE"),
-            
         };
-    }
-);
+    });
 
 // if(OperatingSystem.IsWindows()) {
 //     builder.Services.AddDataProtection().ProtectKeysWithDpapi();
@@ -80,23 +89,25 @@ var app = builder.Build();
 //         string userAgent = context.Request.Headers["User-Agent"].ToString();
 //         // Check if user-agent contains Chrome, Firefox or Safari
 //         if (userAgent.Contains("Chrome") || userAgent.Contains("Firefox") || userAgent.Contains("Safari"))
-//         {    
+//         {
 //             // Allow request to proceed
-//             await next(); 
+//             await next();
 //         }
 //         else
 //         {
 //             // Forbidden
-//             context.Response.StatusCode = 403; 
+//             context.Response.StatusCode = 403;
 //         }
 //     });
 
 // Add Content Security Policy (CSP)
-app.Use(async (context, next) =>
-{
-    context.Response.Headers.Append("Content-Security-Policy", "default-src 'self'");
-    await next();
-});
+app.Use(
+    async (context, next) =>
+    {
+        context.Response.Headers.Append("Content-Security-Policy", "default-src 'self'");
+        await next();
+    }
+);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -104,7 +115,9 @@ if (app.Environment.IsDevelopment())
     app.UseCors("DevCors");
     app.UseSwagger();
     app.UseSwaggerUI();
-} else {
+}
+else
+{
     app.UseCors("ProdCors");
     app.UseHttpsRedirection();
 }

@@ -4,29 +4,32 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace KanbamApi.Models;
 
-public class Card {
-   
-
+public class Card
+{
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string? Id { get; set; }
+
     [BsonRepresentation(BsonType.ObjectId)]
-    public string? ListId { get; set;} 
-    [BsonElement("IndexNumber")] 
-    public int IndexNumber { get; set;}
+    public string? ListId { get; set; }
+
+    [BsonElement("IndexNumber")]
+    public int IndexNumber { get; set; }
+
     [BsonElement("Title")]
-    public string? Title { get; set;}  
+    public string? Title { get; set; }
 
     [BsonElement("Description")]
-    public string? Description { get; set;} 
+    public string? Description { get; set; }
 
     [BsonElement("Priority")]
-    public string? Priority { get; set;}  
+    public string? Priority { get; set; }
 
     [BsonElement("Comments")]
     public List<string>? Comments { get; set; }
 
-    public Card() {
+    public Card()
+    {
         Comments ??= [];
     }
 }
