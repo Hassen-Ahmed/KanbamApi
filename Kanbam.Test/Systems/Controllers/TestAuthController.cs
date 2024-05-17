@@ -67,4 +67,55 @@ public class TestAuthController
             .Be($"{validUser.Email?.Substring(0, validUser.Email.IndexOf('@'))}");
         user["email"].Should().Be(validUser.Email);
     }
+
+    [Fact]
+    public async Task Register_OnWrongUserDetail_Return_400_BadRequest()
+    {
+        // Assign
+        UserRegistration inValidUser =
+            new()
+            {
+                Email = "hassen@gmail.com",
+                Password = "",
+                PasswordConfirm = "",
+            };
+
+        var validatUserRegMock = new Mock<IValidator<UserRegistration>>();
+        var validationResult = new ValidationResult();
+
+        validationResult.Errors.Add(new ValidationFailure("Email", "Email is required!"));
+
+        validatUserRegMock
+            .Setup(v => v.ValidateAsync(inValidUser, default))
+            .ReturnsAsync(validationResult);
+
+        var authRepoMock = new Mock<IAuthRepo>();
+        authRepoMock.Setup(a => a.CheckEmailExist(It.IsAny<string>())).ReturnsAsync((Auth)null!);
+        authRepoMock.Setup(a => a.CreateAsync(It.IsAny<Auth>())).ReturnsAsync(true);
+
+        var userRepoMock = new Mock<IUsersRepo>();
+        userRepoMock.Setup(u => u.CreateNewUserAsync(It.IsAny<User>())).ReturnsAsync(true);
+
+        var authControllerServiceMock = new Mock<IAuthControllerService>();
+        authControllerServiceMock
+            .Setup(a => a.GeneratePasswordHash(It.IsAny<string>(), It.IsAny<byte[]>()))
+            .Returns(new byte[128 / 8]);
+
+        // Act
+
+        AuthController authController =
+            new(
+                validatUserRegMock.Object,
+                authRepoMock.Object,
+                userRepoMock.Object,
+                authControllerServiceMock.Object,
+                null!
+            );
+
+        var result = (ObjectResult)await authController.Register(inValidUser);
+
+        // Assert
+        result.StatusCode.Should().Be(400);
+        result.Value?.ToString().Should().Be("Email is required!");
+    }
 }
