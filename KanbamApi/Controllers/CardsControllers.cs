@@ -1,8 +1,6 @@
 using KanbamApi.Models;
-using KanbamApi.Repositories;
-using KanbamApi.Services;
+using KanbamApi.Repositories.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KanbamApi.Controllers;
@@ -12,9 +10,9 @@ namespace KanbamApi.Controllers;
 [Route("api/[controller]")]
 public class CardsController : ControllerBase
 {
-    private readonly CardsRepo _cardsRepo;
+    private readonly ICardsRepo _cardsRepo;
 
-    public CardsController(CardsRepo cardsRepo) => _cardsRepo = cardsRepo;
+    public CardsController(ICardsRepo cardsRepo) => _cardsRepo = cardsRepo;
 
     [Authorize]
     [HttpGet("{listId}/list")]
