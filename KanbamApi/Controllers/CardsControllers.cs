@@ -1,3 +1,4 @@
+using KanbamApi.Dtos;
 using KanbamApi.Models;
 using KanbamApi.Repositories.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -50,12 +51,20 @@ public class CardsController : ControllerBase
 
     [Authorize]
     [HttpPost]
-    public async Task<IActionResult> CreateNewCard(Card newCard)
+    public async Task<IActionResult> CreateNewCard(DtoCardPost newCard)
     {
         try
         {
-            await _cardsRepo.CreateAsync(newCard);
-            return CreatedAtAction(nameof(CreateNewCard), new { id = newCard.Id }, newCard);
+            Card card =
+                new()
+                {
+                    ListId = newCard.ListId,
+                    Title = newCard.Title,
+                    IndexNumber = newCard.IndexNumber,
+                };
+
+            await _cardsRepo.CreateAsync(card);
+            return CreatedAtAction(nameof(CreateNewCard), new { }, newCard);
         }
         catch (Exception)
         {

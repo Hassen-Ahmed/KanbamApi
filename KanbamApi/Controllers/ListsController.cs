@@ -1,3 +1,4 @@
+using KanbamApi.Dtos;
 using KanbamApi.Models;
 using KanbamApi.Repositories;
 using KanbamApi.Repositories.Interfaces;
@@ -45,15 +46,21 @@ public class ListsController : ControllerBase
 
     [Authorize]
     [HttpPost]
-    public async Task<IActionResult> CreateList(List newList)
+    public async Task<IActionResult> CreateList(DtoListPost newList)
     {
         try
         {
             var userId = User.FindFirst("userId")?.Value;
-            newList.UserId = userId;
-            newList.Cards = [];
-            await _listsRepo.CreateAsync(newList);
-            return CreatedAtAction(nameof(CreateList), new { id = newList.Id }, newList);
+            List list =
+                new()
+                {
+                    UserId = userId,
+                    Title = newList.Title,
+                    IndexNumber = newList.IndexNumber
+                };
+
+            await _listsRepo.CreateAsync(list);
+            return CreatedAtAction(nameof(CreateList), null, newList);
         }
         catch (Exception)
         {
