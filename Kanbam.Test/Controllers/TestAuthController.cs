@@ -9,7 +9,7 @@ using KanbamApi.Services.AuthServices;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 
-namespace Kanbam.Test.Systems.Controllers;
+namespace Kanbam.Test.Controllers;
 
 public class TestAuthController
 {
