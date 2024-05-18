@@ -11,8 +11,30 @@ using Moq;
 
 namespace Kanbam.Test.Controllers;
 
-public class TestAuthController
+public class TestRegisterAuthController
 {
+    private readonly Mock<IValidator<UserRegistration>> _validatUserRegMock;
+    private readonly Mock<IAuthRepo> _authRepoMock;
+    private readonly Mock<IUsersRepo> _userRepoMock;
+    private readonly Mock<IAuthControllerService> _authControllerServiceMock;
+    private readonly AuthController _authController;
+
+    public TestRegisterAuthController()
+    {
+        _validatUserRegMock = new Mock<IValidator<UserRegistration>>();
+        _authRepoMock = new Mock<IAuthRepo>();
+        _userRepoMock = new Mock<IUsersRepo>();
+        _authControllerServiceMock = new Mock<IAuthControllerService>();
+
+        _authController = new AuthController(
+            _validatUserRegMock.Object,
+            _authRepoMock.Object,
+            _userRepoMock.Object,
+            _authControllerServiceMock.Object,
+            null!
+        );
+    }
+
     [Fact]
     public async Task Register_OnValidUserDetail_Return_200_And_ResponseBodyMessage()
     {
@@ -25,35 +47,22 @@ public class TestAuthController
                 PasswordConfirm = "#hassenbest1",
             };
 
-        var validatUserRegMock = new Mock<IValidator<UserRegistration>>();
-        validatUserRegMock
+        _validatUserRegMock
             .Setup(v => v.ValidateAsync(validUser, default))
             .ReturnsAsync(new ValidationResult());
 
-        var authRepoMock = new Mock<IAuthRepo>();
-        authRepoMock.Setup(a => a.CheckEmailExist(It.IsAny<string>())).ReturnsAsync((Auth)null!);
-        authRepoMock.Setup(a => a.CreateAsync(It.IsAny<Auth>())).ReturnsAsync(true);
+        _authRepoMock.Setup(a => a.CheckEmailExist(It.IsAny<string>())).ReturnsAsync((Auth)null!);
+        _authRepoMock.Setup(a => a.CreateAsync(It.IsAny<Auth>())).ReturnsAsync(true);
 
-        var userRepoMock = new Mock<IUsersRepo>();
-        userRepoMock.Setup(u => u.CreateNewUserAsync(It.IsAny<User>())).ReturnsAsync(true);
+        _userRepoMock.Setup(u => u.CreateNewUserAsync(It.IsAny<User>())).ReturnsAsync(true);
 
-        var authControllerServiceMock = new Mock<IAuthControllerService>();
-        authControllerServiceMock
+        _authControllerServiceMock
             .Setup(a => a.GeneratePasswordHash(It.IsAny<string>(), It.IsAny<byte[]>()))
             .Returns(new byte[128 / 8]);
 
         // Act
 
-        AuthController authController =
-            new(
-                validatUserRegMock.Object,
-                authRepoMock.Object,
-                userRepoMock.Object,
-                authControllerServiceMock.Object,
-                null!
-            );
-
-        var result = (ObjectResult)await authController.Register(validUser);
+        var result = (ObjectResult)await _authController.Register(validUser);
 
         // Assert
         var castedValue = (Dictionary<string, object>)result.Value!;
@@ -80,42 +89,99 @@ public class TestAuthController
                 PasswordConfirm = "",
             };
 
-        var validatUserRegMock = new Mock<IValidator<UserRegistration>>();
         var validationResult = new ValidationResult();
 
         validationResult.Errors.Add(new ValidationFailure("Email", "Email is required!"));
 
-        validatUserRegMock
+        _validatUserRegMock
             .Setup(v => v.ValidateAsync(inValidUser, default))
             .ReturnsAsync(validationResult);
 
-        var authRepoMock = new Mock<IAuthRepo>();
-        authRepoMock.Setup(a => a.CheckEmailExist(It.IsAny<string>())).ReturnsAsync((Auth)null!);
-        authRepoMock.Setup(a => a.CreateAsync(It.IsAny<Auth>())).ReturnsAsync(true);
+        _authRepoMock.Setup(a => a.CheckEmailExist(It.IsAny<string>())).ReturnsAsync((Auth)null!);
+        _authRepoMock.Setup(a => a.CreateAsync(It.IsAny<Auth>())).ReturnsAsync(true);
 
-        var userRepoMock = new Mock<IUsersRepo>();
-        userRepoMock.Setup(u => u.CreateNewUserAsync(It.IsAny<User>())).ReturnsAsync(true);
+        _userRepoMock.Setup(u => u.CreateNewUserAsync(It.IsAny<User>())).ReturnsAsync(true);
 
-        var authControllerServiceMock = new Mock<IAuthControllerService>();
-        authControllerServiceMock
+        _authControllerServiceMock
             .Setup(a => a.GeneratePasswordHash(It.IsAny<string>(), It.IsAny<byte[]>()))
             .Returns(new byte[128 / 8]);
 
         // Act
 
-        AuthController authController =
-            new(
-                validatUserRegMock.Object,
-                authRepoMock.Object,
-                userRepoMock.Object,
-                authControllerServiceMock.Object,
-                null!
-            );
-
-        var result = (ObjectResult)await authController.Register(inValidUser);
+        var result = (ObjectResult)await _authController.Register(inValidUser);
 
         // Assert
         result.StatusCode.Should().Be(400);
         result.Value?.ToString().Should().Be("Email is required!");
+    }
+
+    [Fact]
+    public async Task Register_OnEmailIsAlreadyExist_Return_400_BadRequest()
+    {
+        // Assign
+        UserRegistration validUser =
+            new()
+            {
+                Email = "test@gmail.com",
+                Password = "#hassenbest1",
+                PasswordConfirm = "#hassenbest1",
+            };
+
+        _validatUserRegMock
+            .Setup(v => v.ValidateAsync(validUser, default))
+            .ReturnsAsync(new ValidationResult());
+
+        _authRepoMock.Setup(a => a.CheckEmailExist(It.IsAny<string>())).ReturnsAsync(new Auth());
+        _authRepoMock.Setup(a => a.CreateAsync(It.IsAny<Auth>())).ReturnsAsync(true);
+
+        _userRepoMock.Setup(u => u.CreateNewUserAsync(It.IsAny<User>())).ReturnsAsync(true);
+
+        _authControllerServiceMock
+            .Setup(a => a.GeneratePasswordHash(It.IsAny<string>(), It.IsAny<byte[]>()))
+            .Returns(new byte[128 / 8]);
+
+        // Act
+
+        var result = (ObjectResult)await _authController.Register(validUser);
+
+        // Assert
+
+        result.StatusCode.Should().Be(400);
+        result.Value.Should().Be("Email already exist!");
+    }
+
+    [Fact]
+    public async Task Register_OnInternalError_Return_500()
+    {
+        // Assign
+        UserRegistration validUser =
+            new()
+            {
+                Email = "test@gmail.com",
+                Password = "#hassenbest1",
+                PasswordConfirm = "#hassenbest1",
+            };
+
+        _validatUserRegMock
+            .Setup(v => v.ValidateAsync(validUser, default))
+            .ReturnsAsync(new ValidationResult());
+
+        _authRepoMock.Setup(a => a.CheckEmailExist(It.IsAny<string>())).ReturnsAsync((Auth)null!);
+        _authRepoMock.Setup(a => a.CreateAsync(It.IsAny<Auth>())).ReturnsAsync(false);
+
+        _userRepoMock.Setup(u => u.CreateNewUserAsync(It.IsAny<User>())).ReturnsAsync(false);
+
+        _authControllerServiceMock
+            .Setup(a => a.GeneratePasswordHash(It.IsAny<string>(), It.IsAny<byte[]>()))
+            .Returns(new byte[128 / 8]);
+
+        // Act
+
+        var result = (ObjectResult)await _authController.Register(validUser);
+
+        // Assert
+
+        result.StatusCode.Should().Be(500);
+        result.Value.Should().Be("Something wrong with Creating new User!");
     }
 }
