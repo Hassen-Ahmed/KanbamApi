@@ -107,7 +107,6 @@ public class AuthController : ControllerBase
                 succefulRegistration
             );
 
-        // throw new Exception("Something wrong with Creating new User!");
         return StatusCode(500, "Something wrong with Creating new User!");
     }
 
@@ -117,6 +116,7 @@ public class AuthController : ControllerBase
     {
         // validation
         ValidationResult result = await _validatorLogin.ValidateAsync(userLogin);
+
         if (!result.IsValid)
             return BadRequest(result);
 
@@ -125,7 +125,6 @@ public class AuthController : ControllerBase
 
         if (res is null)
             return StatusCode(401, "Wrong Email address.");
-        // return NotFound() // for []
 
         // check if password is correct by create hash and salt.
         byte[] passwordHash = _authControllerService.GeneratePasswordHash(
@@ -142,12 +141,6 @@ public class AuthController : ControllerBase
         if (userId.Length == 0)
             return StatusCode(401, "Unauthorized User!");
 
-        return StatusCode(
-            201,
-            new Dictionary<string, string>
-            {
-                { "token", _authControllerService.GenerateToken(userId) }
-            }
-        );
+        return Ok(new Dictionary<string, string> { { "message", "Successfuly Logedin!" } });
     }
 }
