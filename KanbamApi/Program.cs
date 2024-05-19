@@ -1,5 +1,7 @@
 using System.Text;
 using FluentValidation;
+using KanbamApi.Data;
+using KanbamApi.Data.Interfaces;
 using KanbamApi.Models.AuthModels;
 using KanbamApi.Repositories;
 using KanbamApi.Repositories.Interfaces;
@@ -17,16 +19,17 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddSingleton<IKanbamDbContext, KanbamDbContext>();
+
 builder.Services.AddScoped<IValidator<UserLogin>, UserLoginValidator>();
 builder.Services.AddScoped<IValidator<UserRegistration>, UserRegistrationValidator>();
 
 builder.Services.AddScoped<IAuthControllerService, AuthControllerService>();
 
-builder.Services.AddSingleton<IAuthRepo, AuthRepo>();
-builder.Services.AddSingleton<IUsersRepo, UsersRepo>();
-builder.Services.AddSingleton<IListsRepo, ListsRepo>();
-builder.Services.AddSingleton<ICardsRepo, CardsRepo>();
-builder.Services.AddSingleton<KanbamDbRepository>();
+builder.Services.AddScoped<IAuthRepo, AuthRepo>();
+builder.Services.AddScoped<IUsersRepo, UsersRepo>();
+builder.Services.AddScoped<IListsRepo, ListsRepo>();
+builder.Services.AddScoped<ICardsRepo, CardsRepo>();
 
 builder.Services.AddControllers();
 
