@@ -182,6 +182,6 @@ public class TestRegisterAuthController
         // Assert
 
         result.StatusCode.Should().Be(500);
-        result.Value.Should().Be("Something wrong with Creating new User");
+        result.Value.Should().Be("Something wrong with Creating new User!");
     }
 }
