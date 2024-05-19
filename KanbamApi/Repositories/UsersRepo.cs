@@ -1,3 +1,4 @@
+using KanbamApi.Data.Interfaces;
 using KanbamApi.Models;
 using KanbamApi.Repositories.Interfaces;
 using MongoDB.Driver;
@@ -6,19 +7,17 @@ namespace KanbamApi.Repositories;
 
 public class UsersRepo : IUsersRepo
 {
-    private readonly IMongoCollection<User> _usersCollection;
+    private readonly IKanbamDbContext _kanbamDbContext;
 
-    public UsersRepo(KanbamDbRepository kanbamDbRepository)
+    public UsersRepo(IKanbamDbContext kanbamDbContext)
     {
-        _usersCollection = kanbamDbRepository.kanbamDatabase.GetCollection<User>(
-            DotNetEnv.Env.GetString("USERS_COLLECTION_NAME")
-        );
+        _kanbamDbContext = kanbamDbContext;
     }
 
     public async Task<string> GetUserIdAsync(string? email)
     {
         var filter = Builders<User>.Filter.Eq(u => u.Email, email);
-        var res = await _usersCollection.Find(filter).FirstOrDefaultAsync();
+        var res = await _kanbamDbContext.UsersCollection.Find(filter).FirstOrDefaultAsync();
         var userId = res.Id;
 
         return userId is not null ? userId : "";
@@ -26,7 +25,7 @@ public class UsersRepo : IUsersRepo
 
     public async Task<bool> CreateNewUserAsync(User newUser)
     {
-        await _usersCollection.InsertOneAsync(newUser);
+        await _kanbamDbContext.UsersCollection.InsertOneAsync(newUser);
 
         var res = await GetUserIdAsync(newUser.Email);
 
