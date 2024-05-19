@@ -2,6 +2,9 @@
 
 Kanbam is a web application inspired by Trello's kanban board, designed to help teams manage projects and tasks effectively.
 
+- [Live Demo](https://kanbam.netlify.app/)
+- [ Front-End ](https://github.com/Hassen-Ahmed/Kanbam)
+
 ## Features
 
 - Create multiple boards to organize projects.
@@ -66,6 +69,36 @@ https://learn.microsoft.com/en-us/dotnet/core/install/
 - Microsoft.AspNetCore.OpenApi
 - MongoDB.Driver
 - Swashbuckle.AspNetCore
+
+## Using Git hooks
+- Create pre-push file without any suffix extension.
+   ```bash
+    .touch .git/hooks/pre-push
+   ```
+- Make the file executable.
+   ```bash
+    chmod +x .git/hooks/pre-push
+    ```
+
+- Edit the pre-push file with the appropriate script.
+   ```bash
+        #!/bin/sh
+
+      cd KanbamApi/Kanbam.Test
+
+      dotnet test
+
+      RESULT=$?
+
+      if [ $RESULT -ne 0 ]; then
+          echo "Tests failed. Aborting push."
+          exit 1
+      fi
+
+      exit 0
+
+   ```
+
 
 ## Contributing
 
