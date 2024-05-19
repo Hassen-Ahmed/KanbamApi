@@ -2,11 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
   pull_request:
-    branches:
-      - main
+    branches: [ "main" ]
 
 jobs:
   build-and-test:
@@ -14,21 +12,19 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
-
+      uses: actions/checkout@v4
     - name: Set up .NET Core
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.0.105'
-
+        dotnet-version: 8.0.x
+    - name: Restore dependencies
+      run: dotnet restore
     - name: Build
       working-directory: ./KanbamApi
       run: dotnet build --configuration Release
-
     - name: Run Tests
       working-directory: ./Kanbam.Test
-      run: dotnet test
-  
+      run: dotnet test --no-build --verbosity normal
 
   deploy:
     runs-on: ubuntu-latest
@@ -36,9 +32,8 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
-
-     - name: Trigger Render Deployment
+      uses: actions/checkout@v4
+    - name: Trigger Render Deployment
       env:
         RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
         RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
