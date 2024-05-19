@@ -1,3 +1,4 @@
+using KanbamApi.Data.Interfaces;
 using KanbamApi.Models;
 using KanbamApi.Repositories.Interfaces;
 using MongoDB.Driver;
@@ -6,21 +7,11 @@ namespace KanbamApi.Repositories;
 
 public class ListsRepo : IListsRepo
 {
-    private readonly IMongoCollection<List> _listsCollection;
-    private readonly IMongoCollection<Card> _cardsCollection;
-    private readonly IMongoCollection<User> _usersCollection;
+    private readonly IKanbamDbContext _kanbamDbContext;
 
-    public ListsRepo(KanbamDbRepository kanbamDbRepository)
+    public ListsRepo(IKanbamDbContext kanbamDbContext)
     {
-        _listsCollection = kanbamDbRepository.kanbamDatabase.GetCollection<List>(
-            DotNetEnv.Env.GetString("LISTS_COLLECTION_NAME")
-        );
-        _cardsCollection = kanbamDbRepository.kanbamDatabase.GetCollection<Card>(
-            DotNetEnv.Env.GetString("CARDS_COLLECTION_NAME")
-        );
-        _usersCollection = kanbamDbRepository.kanbamDatabase.GetCollection<User>(
-            DotNetEnv.Env.GetString("USERS_COLLECTION_NAME")
-        );
+        _kanbamDbContext = kanbamDbContext;
     }
 
     public async Task<List<List>> GetListsWithCardsByUserId(string userId)
@@ -33,7 +24,7 @@ public class ListsRepo : IListsRepo
         var filter = Builders<List>.Filter.Eq(x => x.UserId, userId);
 
         var lookupStage = PipelineStageDefinitionBuilder.Lookup<List, Card, List>(
-            _cardsCollection,
+            _kanbamDbContext.CardsCollection,
             x => x.Id,
             c => c.ListId,
             listWithCards => listWithCards.Cards
@@ -41,24 +32,24 @@ public class ListsRepo : IListsRepo
 
         var pipeline = new[] { PipelineStageDefinitionBuilder.Match(filter), lookupStage };
 
-        var cursor = await _listsCollection.AggregateAsync<List>(pipeline);
+        var cursor = await _kanbamDbContext.ListsCollection.AggregateAsync<List>(pipeline);
         return await cursor.ToListAsync();
     }
 
     public async Task CreateAsync(List newList)
     {
-        await _listsCollection.InsertOneAsync(newList);
+        await _kanbamDbContext.ListsCollection.InsertOneAsync(newList);
     }
 
     public async Task UpdateAsync(string id, List updatedList)
     {
         var filter = Builders<List>.Filter.Eq(l => l.Id, id);
-        await _listsCollection.ReplaceOneAsync(filter, updatedList);
+        await _kanbamDbContext.ListsCollection.ReplaceOneAsync(filter, updatedList);
     }
 
     public async Task RemoveAsync(string id)
     {
         var filter = Builders<List>.Filter.Eq(l => l.Id, id);
-        await _listsCollection.DeleteOneAsync(filter);
+        await _kanbamDbContext.ListsCollection.DeleteOneAsync(filter);
     }
 }
