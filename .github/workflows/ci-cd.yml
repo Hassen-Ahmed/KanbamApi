@@ -12,9 +12,9 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v2
     - name: Set up .NET Core
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 8.0.x
     - name: Restore dependencies
@@ -23,8 +23,8 @@ jobs:
       working-directory: ./KanbamApi
       run: dotnet build --configuration Release
     - name: Run Tests
-      working-directory: ./Kanbam.Test
-      run: dotnet test --no-build --verbosity normal
+      working-directory: ./KanbamApi/Kanbam.Test
+      run: dotnet test 
 
   deploy:
     runs-on: ubuntu-latest
@@ -32,7 +32,8 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v2
+      
     - name: Trigger Render Deployment
       env:
         RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
