@@ -75,5 +75,6 @@ public class TestLoginAuthController
 
         result.StatusCode.Should().Be(200);
         message.Should().Be("Successfuly Logedin!");
+        _validatLoginMock.Verify(a => a.ValidateAsync(validUser, default), Times.Once);
     }
 }
