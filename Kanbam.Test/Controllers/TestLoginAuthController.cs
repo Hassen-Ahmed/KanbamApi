@@ -66,15 +66,19 @@ public class TestLoginAuthController
             .Setup(a => a.GeneratePasswordHash(It.IsAny<string>(), It.IsAny<byte[]>()))
             .Returns(new byte[128 / 8]);
 
+        _authControllerServiceMock
+            .Setup(a => a.GenerateToken(It.IsAny<string>()))
+            .Returns("this is my token.");
+
         // Act
         var result = (ObjectResult)await _authController.Login(validUser);
 
         // Assert
         var castedValue = (Dictionary<string, string>)result.Value!;
-        var message = castedValue["message"];
+        var token = castedValue["token"];
 
-        result.StatusCode.Should().Be(200);
-        message.Should().Be("Successfuly Logedin!");
+        result.StatusCode.Should().Be(201);
+        token.Should().Be("this is my token.");
         _validatLoginMock.Verify(a => a.ValidateAsync(validUser, default), Times.Once);
     }
 }
