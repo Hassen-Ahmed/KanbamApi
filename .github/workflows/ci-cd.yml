@@ -23,7 +23,7 @@ jobs:
       working-directory: ./KanbamApi
       run: dotnet build --configuration Release
     - name: Run Tests
-      working-directory: ./KanbamApi/Kanbam.Test
+      working-directory: Kanbam.Test
       run: dotnet test 
 
   deploy:
