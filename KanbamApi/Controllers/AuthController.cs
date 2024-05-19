@@ -141,6 +141,12 @@ public class AuthController : ControllerBase
         if (userId.Length == 0)
             return StatusCode(401, "Unauthorized User!");
 
-        return Ok(new Dictionary<string, string> { { "message", "Successfuly Logedin!" } });
+        return StatusCode(
+            201,
+            new Dictionary<string, string>
+            {
+                { "token", _authControllerService.GenerateToken(userId) }
+            }
+        );
     }
 }
