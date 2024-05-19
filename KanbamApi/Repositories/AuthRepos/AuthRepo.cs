@@ -1,3 +1,4 @@
+using KanbamApi.Data.Interfaces;
 using KanbamApi.Models;
 using KanbamApi.Repositories.Interfaces;
 using MongoDB.Driver;
@@ -6,26 +7,27 @@ namespace KanbamApi.Repositories;
 
 public class AuthRepo : IAuthRepo
 {
-    private readonly IMongoCollection<Auth> _authCollection;
+    private readonly IKanbamDbContext _kanbamDbContext;
 
-    public AuthRepo(KanbamDbRepository kanbamDbRepository)
+    public AuthRepo(IKanbamDbContext kanbamDbContext)
     {
-        _authCollection = kanbamDbRepository.kanbamDatabase.GetCollection<Auth>(
-            DotNetEnv.Env.GetString("AUTH_COLLECTION_NAME")
-        );
+        _kanbamDbContext = kanbamDbContext;
     }
 
-    public async Task<List<Auth>> GetAsync() => await _authCollection.Find(_ => true).ToListAsync();
+    public async Task<List<Auth>> GetAsync() =>
+        await _kanbamDbContext.AuthCollection.Find(_ => true).ToListAsync();
 
     public async Task<Auth> CheckEmailExist(string? email)
     {
-        Auth? result = await _authCollection.Find(x => x.Email == email).FirstOrDefaultAsync();
+        Auth? result = await _kanbamDbContext
+            .AuthCollection.Find(x => x.Email == email)
+            .FirstOrDefaultAsync();
         return result;
     }
 
     public async Task<bool> CreateAsync(Auth newAuth)
     {
-        await _authCollection.InsertOneAsync(newAuth);
+        await _kanbamDbContext.AuthCollection.InsertOneAsync(newAuth);
 
         var res = await CheckEmailExist(newAuth.Email);
 
