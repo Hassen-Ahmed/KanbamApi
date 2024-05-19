@@ -45,10 +45,11 @@ jobs:
           --data '{"clearCache": false}' \
           https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys
 
-    - name: Set Secrets Debug
+
+    - name: Set up Environment Variables
       run: |
-        echo "::set-env name=RENDER_API_KEY::$RENDER_API_KEY"
-        echo "::set-env name=RENDER_SERVICE_ID::$RENDER_SERVICE_ID"
+        echo "RENDER_API_KEY=${{ secrets.RENDER_API_KEY }}" >> $GITHUB_ENV
+        echo "RENDER_SERVICE_ID=${{ secrets.RENDER_SERVICE_ID }}" >> $GITHUB_ENV
     - name: Print Secrets Debug
       run: |
         echo "RENDER_API_KEY: $RENDER_API_KEY"
