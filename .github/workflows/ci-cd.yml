@@ -25,7 +25,6 @@ jobs:
     
     - name: Setup environment
       run: |
-        echo "DOTNET_ENVIRONMENT=test" >> $GITHUB_ENV
         echo "CONNECTION_STRING=${{secrets.CONNECTION_STRING}}" >> $GITHUB_ENV
         echo "DB_NAME=${{secrets.DB_NAME}}" >> $GITHUB_ENV
 
