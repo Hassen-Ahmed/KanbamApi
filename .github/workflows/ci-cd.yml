@@ -22,10 +22,6 @@ jobs:
       run: |
         docker run --name mongo -p 27017:27017 -d mongodb/mongodb-community-server:latest
         docker ps -a
-  
-    - name: Create database
-      run: |
-        docker exec mongo mongo --eval "use KanbamTestDb"
     
     - name: Setup environment
       run: |
