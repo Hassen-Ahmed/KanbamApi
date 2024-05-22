@@ -14,7 +14,13 @@ public class TestBase : IAsyncLifetime
         string envFilePath = Path.Combine(projectDir, "KanbamApi", ".env.test");
 
         if (File.Exists(envFilePath))
+        {
             DotNetEnv.Env.Load(envFilePath);
+        }
+        else
+        {
+            DotNetEnv.Env.Load();
+        }
     }
 
     public async Task InitializeAsync()
