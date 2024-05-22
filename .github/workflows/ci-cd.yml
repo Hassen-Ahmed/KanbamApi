@@ -10,17 +10,6 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
-    services:
-      mongodb:
-        image: mongo:latest
-        ports:
-          - 27017:27017
-        options: > 
-          --health-cmd="mongo --eval 'db.runCommand({ ping: 1 })'"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3 
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
@@ -29,15 +18,18 @@ jobs:
       with:
         dotnet-version: 8.0.x
 
-    - name: Install MongoDB client tools
+    - name: Start MongoDB container
       run: |
-        sudo apt-get update
-        sudo apt-get install -y mongodb-clients
-
+        docker run --name mongo -p 27017:27017 -d mongodb/mongodb-community-server:latest
+        docker ps -a
+  
     - name: Wait for MongoDB to be ready
       run: |
-        until mongo --eval "print(\"waited for connection\")"; do sleep 1; done
+        until docker exec mongo mongo --eval "print(\"waited for connection\")"; do sleep 1; done
 
+    - name: Create database
+      run: |
+        docker exec mongo mongo --eval "use KanbamTestDb"
     
     - name: Setup environment
       run: |
