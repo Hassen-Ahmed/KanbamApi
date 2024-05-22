@@ -2,18 +2,28 @@ using System.Text;
 using FluentValidation;
 using KanbamApi.Data;
 using KanbamApi.Data.Interfaces;
+using KanbamApi.Data.Seed;
 using KanbamApi.Models.AuthModels;
 using KanbamApi.Repositories;
 using KanbamApi.Repositories.Interfaces;
-using KanbamApi.Services.AuthServices;
-using KanbamApi.Validators.AuthValidators;
+using KanbamApi.Util.Generators.SecureData;
+using KanbamApi.Util.Generators.SecureData.Interfaces;
+using KanbamApi.Util.Validators.AuthValidators;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
-// load .env file variables
-DotNetEnv.Env.Load();
-
 var builder = WebApplication.CreateBuilder(args);
+
+var env = builder.Environment.EnvironmentName.ToLower();
+
+if (env == "test" || env == "development")
+{
+    DotNetEnv.Env.Load($".env.{env}");
+}
+else
+{
+    DotNetEnv.Env.Load();
+}
 
 // Add services to the container.
 builder.Services.AddEndpointsApiExplorer();
@@ -24,12 +34,14 @@ builder.Services.AddSingleton<IKanbamDbContext, KanbamDbContext>();
 builder.Services.AddScoped<IValidator<UserLogin>, UserLoginValidator>();
 builder.Services.AddScoped<IValidator<UserRegistration>, UserRegistrationValidator>();
 
-builder.Services.AddScoped<IAuthControllerService, AuthControllerService>();
+builder.Services.AddScoped<IAuthData, AuthData>();
 
 builder.Services.AddScoped<IAuthRepo, AuthRepo>();
 builder.Services.AddScoped<IUsersRepo, UsersRepo>();
 builder.Services.AddScoped<IListsRepo, ListsRepo>();
 builder.Services.AddScoped<ICardsRepo, CardsRepo>();
+
+builder.Services.AddScoped<IMongoDbSeeder, MongoDbSeeder>();
 
 builder.Services.AddControllers();
 
@@ -57,7 +69,7 @@ builder.Services.AddCors(
             (corsBuilder) =>
             {
                 corsBuilder
-                    .WithOrigins("https://kanbam.netlify.app", "http://localhost:5173") // vite localHost address
+                    .WithOrigins("https://kanbam.netlify.app")
                     .AllowAnyMethod()
                     .AllowAnyHeader()
                     .AllowCredentials();
@@ -120,6 +132,10 @@ app.Use(
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    // IKanbamDbContext kanbamDbContext = new KanbamDbContext();
+    // MongoDbSeeder mongoDbSeeder = new(kanbamDbContext);
+    // mongoDbSeeder.SeedAsync().Wait();
+
     app.UseCors("DevCors");
     app.UseSwagger();
     app.UseSwaggerUI();
