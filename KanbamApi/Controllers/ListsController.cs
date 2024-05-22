@@ -16,13 +16,11 @@ public class ListsController : ControllerBase
 {
     private readonly IListsRepo _listsRepo;
     private readonly ICardsRepo _cardsRepo;
-    private readonly IUsersRepo _usersService;
 
-    public ListsController(IListsRepo listsRepo, ICardsRepo cardsRepo, IUsersRepo usersRepo)
+    public ListsController(IListsRepo listsRepo, ICardsRepo cardsRepo)
     {
         _listsRepo = listsRepo;
         _cardsRepo = cardsRepo;
-        _usersService = usersRepo;
     }
 
     [Authorize(Roles = "User")]
