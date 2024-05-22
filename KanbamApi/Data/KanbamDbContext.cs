@@ -32,23 +32,6 @@ public class KanbamDbContext : IKanbamDbContext
         _authCollection = kanbamDatabase.GetCollection<Auth>(
             DotNetEnv.Env.GetString("AUTH_COLLECTION_NAME")
         );
-
-        Console.WriteLine(
-            $@"
-        ---------------------------------------------
-        ---------------------------------------------
-        ---------------------------------------------
-        ---------------------------------------------
-        ---------------------------------------------
-        ---------------------------------------------
-        ---------------------------------------------
-        ---------------------------------------------
-        {DotNetEnv.Env.GetString("CONNECTION_STRING")}
-        {DotNetEnv.Env.GetString("DB_NAME")}
-        {DotNetEnv.Env.GetString("USERS_COLLECTION_NAME")}
-        {DotNetEnv.Env.GetString("USERS_COLLECTION_NAME")}
-        "
-        );
     }
 
     public IMongoCollection<Card> CardsCollection => _cardsCollection;
