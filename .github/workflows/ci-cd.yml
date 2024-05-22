@@ -20,10 +20,13 @@ jobs:
 
     - name: Setup environment
       run: |
-          echo "DOTNET_ENVIRONMENT=Test" >> $GITHUB_ENV
+          echo "DOTNET_ENVIRONMENT=test" >> $GITHUB_ENV
           echo "CONNECTION_STRING=mongodb://localhost:27017/KanbamTestDb" >> $GITHUB_ENV
           echo "DB_NAME=KanbamTestDb" >> $GITHUB_ENV
-          # Add any other environment variables your tests need here
+          echo "AUTH_COLLECTION_NAME=Auth" >> $GITHUB_ENV
+          echo "USERS_COLLECTION_NAME=Users" >> $GITHUB_ENV
+          echo "LISTS_COLLECTION_NAME=Lists" >> $GITHUB_ENV
+          echo "CARDS_COLLECTION_NAME=Cards" >> $GITHUB_ENV
         
     - name: Restore dependencies
       run: dotnet restore
