@@ -9,17 +9,6 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-  
-    services:
-      mongodb:
-        image: mongo:latest
-        ports:
-          - 27017:27017
-        options: > 
-          --health-cmd="mongo --eval 'db.runCommand({ ping: 1 })'" 
-          --health-interval=10s 
-          --health-timeout=5s 
-          --health-retries=5 
 
     steps:
     - name: Checkout code
@@ -32,7 +21,8 @@ jobs:
     - name: Setup environment
       run: |
           echo "DOTNET_ENVIRONMENT=Test" >> $GITHUB_ENV
-          echo "MONGO_URI=mongodb://localhost:27017/KanbamTestDb" >> $GITHUB_ENV
+          echo "CONNECTION_STRING=mongodb://localhost:27017/KanbamTestDb" >> $GITHUB_ENV
+          echo "DB_NAME=KanbamTestDb" >> $GITHUB_ENV
           # Add any other environment variables your tests need here
         
     - name: Restore dependencies
