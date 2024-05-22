@@ -1,21 +1,22 @@
 using FluentAssertions;
 using FluentValidation;
 using FluentValidation.Results;
+using Kanbam.Test.Reset;
 using KanbamApi.Controllers;
 using KanbamApi.Models;
 using KanbamApi.Models.AuthModels;
 using KanbamApi.Repositories.Interfaces;
-using KanbamApi.Services.AuthServices;
+using KanbamApi.Util.Generators.SecureData.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 
 namespace Kanbam.Test.Controllers;
 
-public class TestLoginAuthController
+public class TestLoginAuthController : TestBase
 {
     private readonly Mock<IAuthRepo> _authRepoMock;
     private readonly Mock<IUsersRepo> _userRepoMock;
-    private readonly Mock<IAuthControllerService> _authControllerServiceMock;
+    private readonly Mock<IAuthData> _authControllerServiceMock;
     private readonly AuthController _authController;
     private readonly Mock<IValidator<UserLogin>> _validatLoginMock;
 
@@ -23,7 +24,7 @@ public class TestLoginAuthController
     {
         _authRepoMock = new Mock<IAuthRepo>();
         _userRepoMock = new Mock<IUsersRepo>();
-        _authControllerServiceMock = new Mock<IAuthControllerService>();
+        _authControllerServiceMock = new Mock<IAuthData>();
         _validatLoginMock = new Mock<IValidator<UserLogin>>();
 
         _authController = new AuthController(
