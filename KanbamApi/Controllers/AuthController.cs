@@ -3,11 +3,9 @@ using FluentValidation;
 using FluentValidation.Results;
 using KanbamApi.Models;
 using KanbamApi.Models.AuthModels;
-using KanbamApi.Repositories;
 using KanbamApi.Repositories.Interfaces;
-using KanbamApi.Services.AuthServices;
+using KanbamApi.Util.Generators.SecureData.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KanbamApi.Controllers;
@@ -21,13 +19,13 @@ public class AuthController : ControllerBase
     private readonly IValidator<UserRegistration> _validatorRegistration;
     private readonly IUsersRepo _usersRepo;
     private readonly IAuthRepo _authRepo;
-    private readonly IAuthControllerService _authControllerService;
+    private readonly IAuthData _authControllerService;
 
     public AuthController(
         IValidator<UserRegistration> validatorRegistration,
         IAuthRepo authRepo,
         IUsersRepo usersRepo,
-        IAuthControllerService authControllerService,
+        IAuthData authControllerService,
         IValidator<UserLogin> validatorLogin
     )
     {
