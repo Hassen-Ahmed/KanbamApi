@@ -18,15 +18,28 @@ jobs:
       with:
         dotnet-version: 8.0.x
 
+    - name: Start MongoDB container
+      run: |
+        docker run --name mongo -d -p 27017:27017 mongo:latest
+        docker ps -a
+  
+    - name: Wait for MongoDB to be ready
+      run: |
+        until docker exec mongo mongo --eval "print(\"waited for connection\")"; do sleep 1; done
+
+    - name: Create database
+      run: |
+        docker exec mongo mongo --eval "use KanbamTestDb"
+    
     - name: Setup environment
       run: |
-          echo "DOTNET_ENVIRONMENT=test" >> $GITHUB_ENV
-          echo "CONNECTION_STRING=mongodb://localhost:27017/KanbamTestDb" >> $GITHUB_ENV
-          echo "DB_NAME=KanbamTestDb" >> $GITHUB_ENV
-          echo "AUTH_COLLECTION_NAME=Auth" >> $GITHUB_ENV
-          echo "USERS_COLLECTION_NAME=Users" >> $GITHUB_ENV
-          echo "LISTS_COLLECTION_NAME=Lists" >> $GITHUB_ENV
-          echo "CARDS_COLLECTION_NAME=Cards" >> $GITHUB_ENV
+        echo "DOTNET_ENVIRONMENT=test" >> $GITHUB_ENV
+        echo "CONNECTION_STRING=mongodb://localhost:27017/KanbamTestDb" >> $GITHUB_ENV
+        echo "DB_NAME=KanbamTestDb" >> $GITHUB_ENV
+        echo "AUTH_COLLECTION_NAME=Auth" >> $GITHUB_ENV
+        echo "USERS_COLLECTION_NAME=Users" >> $GITHUB_ENV
+        echo "LISTS_COLLECTION_NAME=Lists" >> $GITHUB_ENV
+        echo "CARDS_COLLECTION_NAME=Cards" >> $GITHUB_ENV
         
     - name: Restore dependencies
       run: dotnet restore
