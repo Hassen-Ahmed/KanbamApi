@@ -23,10 +23,6 @@ jobs:
         docker run --name mongo -p 27017:27017 -d mongodb/mongodb-community-server:latest
         docker ps -a
   
-    - name: Wait for MongoDB to be ready
-      run: |
-        until docker exec mongo mongo --eval "print(\"waited for connection\")"; do sleep 1; done
-
     - name: Create database
       run: |
         docker exec mongo mongo --eval "use KanbamTestDb"
