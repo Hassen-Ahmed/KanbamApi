@@ -44,6 +44,8 @@ jobs:
     - name: Run Tests
       working-directory: Kanbam.Test
       run: dotnet test --verbosity normal
+    - name: Stop Docker container
+      run: docker stop mongo
 
   deploy:
     runs-on: ubuntu-latest
