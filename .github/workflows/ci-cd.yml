@@ -13,6 +13,7 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
+      
     - name: Set up .NET Core
       uses: actions/setup-dotnet@v1
       with:
@@ -38,12 +39,11 @@ jobs:
         
     - name: Restore dependencies
       run: dotnet restore
-    - name: Build
-      working-directory: KanbamApi
-      run: dotnet build --configuration Release
+
     - name: Run Tests
       working-directory: Kanbam.Test
       run: dotnet test --verbosity normal
+
     - name: Stop Docker container
       run: docker stop mongo
 
