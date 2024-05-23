@@ -45,7 +45,7 @@ jobs:
       run: dotnet test --verbosity normal
 
     - name: Stop Docker container
-      run: docker stop mongo
+      run: docker stop mongo && docker ps -a
 
   deploy:
     runs-on: ubuntu-latest
