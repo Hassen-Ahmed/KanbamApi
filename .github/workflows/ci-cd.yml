@@ -23,19 +23,6 @@ jobs:
         docker run --name mongo -p 27017:27017 -d mongodb/mongodb-community-server:latest
         docker ps -a
     
-    - name: Setup environment
-      run: |
-        echo "CONNECTION_STRING=${{secrets.CONNECTION_STRING}}" >> $GITHUB_ENV
-        echo "DB_NAME=${{secrets.DB_NAME}}" >> $GITHUB_ENV
-
-        echo "AUTH_COLLECTION_NAME=${{secrets.AUTH_COLLECTION_NAME}}" >> $GITHUB_ENV
-        echo "USERS_COLLECTION_NAME=${{secrets.USERS_COLLECTION_NAME}}" >> $GITHUB_ENV
-        echo "LISTS_COLLECTION_NAME=${{secrets.LISTS_COLLECTION_NAME}}" >> $GITHUB_ENV
-        echo "CARDS_COLLECTION_NAME=${{secrets.CARDS_COLLECTION_NAME}}" >> $GITHUB_ENV
-
-        echo "TOKEN_KEY=${{secrets.TOKEN_KEY}}" >> $GITHUB_ENV
-        echo "PASSWORD_KEY=${{secrets.PASSWORD_KEY}}" >> $GITHUB_ENV
-        
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
