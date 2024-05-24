@@ -18,6 +18,11 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 8.0.x
+
+    - name: Start MongoDB container
+      run: |
+        docker run --name mongo -p 27017:27017 -d mongodb/mongodb-community-server:latest
+        docker ps -a
     
     - name: Setup environment
       run: |
@@ -38,6 +43,11 @@ jobs:
     - name: Run Tests
       working-directory: Kanbam.Test
       run: dotnet test --verbosity normal
+
+    - name: Stop Docker container
+      run: | 
+        docker stop mongo  
+        docker ps -a
 
   deploy:
     runs-on: ubuntu-latest
