@@ -31,7 +31,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v1.0.0
 
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v1
@@ -73,7 +73,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v1.0.0
       
     - name: Trigger Render Deployment
       env:
