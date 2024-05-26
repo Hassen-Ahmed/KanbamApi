@@ -1,6 +1,7 @@
 using FluentAssertions;
 using FluentValidation;
 using FluentValidation.Results;
+using Kanbam.Test.Fixtures;
 using Kanbam.Test.Reset;
 using KanbamApi.Controllers;
 using KanbamApi.Models;
@@ -40,7 +41,7 @@ public class TestLoginAuthController : TestBase
     public async Task Login_OnValidUserDetail_ReturnOkResult_200()
     {
         // Assign
-        UserLogin validUser = new() { Email = "test@gmail.com", Password = "#hassenbest1", };
+        UserLogin validUser = UserLoginFixture.ValidUser();
 
         _validatLoginMock
             .Setup(x => x.ValidateAsync(validUser, default))
