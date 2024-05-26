@@ -1,6 +1,7 @@
 using FluentAssertions;
 using FluentValidation;
 using FluentValidation.Results;
+using Kanbam.Test.Fixtures;
 using Kanbam.Test.Reset;
 using KanbamApi.Controllers;
 using KanbamApi.Models;
@@ -40,13 +41,7 @@ public class TestRegisterAuthController : TestBase
     public async Task Register_OnValidUserDetail_Return_200_And_ResponseBodyMessage()
     {
         // Assign
-        UserRegistration validUser =
-            new()
-            {
-                Email = "test@gmail.com",
-                Password = "#hassenbest1",
-                PasswordConfirm = "#hassenbest1",
-            };
+        UserRegistration validUser = UserRegFixture.ValidUser();
 
         _validatUserRegMock
             .Setup(v => v.ValidateAsync(validUser, default))
@@ -82,13 +77,7 @@ public class TestRegisterAuthController : TestBase
     public async Task Register_OnWrongUserDetail_Return_400_BadRequest()
     {
         // Assign
-        UserRegistration inValidUser =
-            new()
-            {
-                Email = "hassen@gmail.com",
-                Password = "",
-                PasswordConfirm = "",
-            };
+        UserRegistration inValidUser = UserRegFixture.InValidUser();
 
         var validationResult = new ValidationResult();
 
@@ -120,13 +109,7 @@ public class TestRegisterAuthController : TestBase
     public async Task Register_OnEmailIsAlreadyExist_Return_400_BadRequest()
     {
         // Assign
-        UserRegistration validUser =
-            new()
-            {
-                Email = "test@gmail.com",
-                Password = "#hassenbest1",
-                PasswordConfirm = "#hassenbest1",
-            };
+        UserRegistration validUser = UserRegFixture.ValidUser();
 
         _validatUserRegMock
             .Setup(v => v.ValidateAsync(validUser, default))
@@ -155,13 +138,7 @@ public class TestRegisterAuthController : TestBase
     public async Task Register_OnInternalError_Return_500()
     {
         // Assign
-        UserRegistration validUser =
-            new()
-            {
-                Email = "test@gmail.com",
-                Password = "#hassenbest1",
-                PasswordConfirm = "#hassenbest1",
-            };
+        UserRegistration validUser = UserRegFixture.ValidUser();
 
         _validatUserRegMock
             .Setup(v => v.ValidateAsync(validUser, default))
