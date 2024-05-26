@@ -48,24 +48,14 @@ jobs:
   
       - name: Setup environment
         run: |
-          if [ -z "$CONNECTION_STRING" ]; then echo "CONNECTION_STRING is not set"; exit 1; fi
-          if [ -z "$DB_NAME" ]; then echo "DB_NAME is not set"; exit 1; fi
-          if [ -z "$AUTH_COLLECTION_NAME" ]; then echo "AUTH_COLLECTION_NAME is not set"; exit 1; fi
-          if [ -z "$USERS_COLLECTION_NAME" ]; then echo "USERS_COLLECTION_NAME is not set"; exit 1; fi
-          if [ -z "$LISTS_COLLECTION_NAME" ]; then echo "LISTS_COLLECTION_NAME is not set"; exit 1; fi
-          if [ -z "$CARDS_COLLECTION_NAME" ]; then echo "CARDS_COLLECTION_NAME is not set"; exit 1; fi
-          if [ -z "$TOKEN_KEY" ]; then echo "TOKEN_KEY is not set"; exit 1; fi
-          if [ -z "$PASSWORD_KEY" ]; then echo "PASSWORD_KEY is not set"; exit 1; fi
-
-        env:
-          CONNECTION_STRING: ${{ secrets.CONNECTION_STRING }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-          AUTH_COLLECTION_NAME: ${{ secrets.AUTH_COLLECTION_NAME }}
-          USERS_COLLECTION_NAME: ${{ secrets.USERS_COLLECTION_NAME }}
-          LISTS_COLLECTION_NAME: ${{ secrets.LISTS_COLLECTION_NAME }}
-          CARDS_COLLECTION_NAME: ${{ secrets.CARDS_COLLECTION_NAME }}
-          TOKEN_KEY: ${{ secrets.TOKEN_KEY }}
-          PASSWORD_KEY: ${{ secrets.PASSWORD_KEY }}
+          echo "CONNECTION_STRING=${{secrets.CONNECTION_STRING}}" >> $GITHUB_ENV
+          echo "DB_NAME=${{secrets.DB_NAME}}" >> $GITHUB_ENV
+          echo "AUTH_COLLECTION_NAME=${{secrets.AUTH_COLLECTION_NAME}}" >> $GITHUB_ENV
+          echo "USERS_COLLECTION_NAME=${{secrets.USERS_COLLECTION_NAME}}" >> $GITHUB_ENV
+          echo "LISTS_COLLECTION_NAME=${{secrets.LISTS_COLLECTION_NAME}}" >> $GITHUB_ENV
+          echo "CARDS_COLLECTION_NAME=${{secrets.CARDS_COLLECTION_NAME}}" >> $GITHUB_ENV
+          echo "TOKEN_KEY=${{secrets.TOKEN_KEY}}" >> $GITHUB_ENV
+          echo "PASSWORD_KEY=${{secrets.PASSWORD_KEY}}" >> $GITHUB_ENV
 
       - name: Run Tests
         working-directory: Kanbam.Test
