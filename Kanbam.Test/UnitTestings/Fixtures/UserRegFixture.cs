@@ -1,6 +1,6 @@
 using KanbamApi.Models.AuthModels;
 
-namespace Kanbam.Test.Fixtures;
+namespace Kanbam.Test.UnitTestings.Fixtures;
 
 public class UserRegFixture
 {

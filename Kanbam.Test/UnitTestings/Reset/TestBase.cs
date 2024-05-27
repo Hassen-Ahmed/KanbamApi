@@ -1,7 +1,7 @@
 using KanbamApi.Data;
 using KanbamApi.Data.Seed;
 
-namespace Kanbam.Test.Reset;
+namespace Kanbam.Test.UnitTestings.Reset;
 
 public class TestBase : IAsyncLifetime
 {

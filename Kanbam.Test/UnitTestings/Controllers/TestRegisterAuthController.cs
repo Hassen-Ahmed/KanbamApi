@@ -1,8 +1,8 @@
 using FluentAssertions;
 using FluentValidation;
 using FluentValidation.Results;
-using Kanbam.Test.Fixtures;
-using Kanbam.Test.Reset;
+using Kanbam.Test.UnitTestings.Fixtures;
+using Kanbam.Test.UnitTestings.Reset;
 using KanbamApi.Controllers;
 using KanbamApi.Models;
 using KanbamApi.Models.AuthModels;
@@ -11,7 +11,7 @@ using KanbamApi.Util.Generators.SecureData.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 
-namespace Kanbam.Test.Controllers;
+namespace Kanbam.Test.UnitTestings.Controllers;
 
 public class TestRegisterAuthController : TestBase
 {
