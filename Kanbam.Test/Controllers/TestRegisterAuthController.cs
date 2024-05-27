@@ -74,7 +74,7 @@ public class TestRegisterAuthController : TestBase
     }
 
     [Fact]
-    public async Task Register_OnWrongUserDetail_Return_400_BadRequest()
+    public async Task Register_OnInValidUserDetail_Return_400_BadRequest()
     {
         // Assign
         UserRegistration inValidUser = UserRegFixture.InValidUser();
