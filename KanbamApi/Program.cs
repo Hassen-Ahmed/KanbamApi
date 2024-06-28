@@ -121,13 +121,13 @@ var app = builder.Build();
 //     });
 
 // Add Content Security Policy (CSP)
-app.Use(
-    async (context, next) =>
-    {
-        context.Response.Headers.Append("Content-Security-Policy", "default-src 'self'");
-        await next();
-    }
-);
+// app.Use(
+//     async (context, next) =>
+//     {
+//         context.Response.Headers.Append("Content-Security-Policy", "default-src 'self'");
+//         await next();
+//     }
+// );
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
