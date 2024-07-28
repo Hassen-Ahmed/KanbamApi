@@ -26,9 +26,10 @@ public class CardsRepo : ICardsRepo
         return await _kanbamDbContext.CardsCollection.FindSync(filter).ToListAsync();
     }
 
-    public async Task CreateAsync(Card newCard)
+    public async Task<Card> CreateAsync(Card newCard)
     {
         await _kanbamDbContext.CardsCollection.InsertOneAsync(newCard);
+        return newCard;
     }
 
     public async Task UpdateAsync(string id, Card updatedCard)
