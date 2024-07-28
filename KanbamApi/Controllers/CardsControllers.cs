@@ -64,7 +64,7 @@ public class CardsController : ControllerBase
                 };
 
             var createdCard = await _cardsRepo.CreateAsync(card);
-            return CreatedAtAction(nameof(CreateNewCard), new { id = createdCard.Id }, createdCard);
+            return StatusCode(201, createdCard);
         }
         catch (Exception)
         {
