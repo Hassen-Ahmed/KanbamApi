@@ -58,7 +58,7 @@ public class ListsController : ControllerBase
                 };
 
             var createdList = await _listsRepo.CreateAsync(list);
-            return CreatedAtAction(nameof(CreateList), new { id = createdList.Id }, createdList);
+            return StatusCode(201, createdList);
         }
         catch (Exception)
         {
