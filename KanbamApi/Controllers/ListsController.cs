@@ -57,8 +57,8 @@ public class ListsController : ControllerBase
                     IndexNumber = newList.IndexNumber
                 };
 
-            await _listsRepo.CreateAsync(list);
-            return CreatedAtAction(nameof(CreateList), null, newList);
+            var createdList = await _listsRepo.CreateAsync(list);
+            return CreatedAtAction(nameof(CreateList), new { id = createdList.Id }, createdList);
         }
         catch (Exception)
         {

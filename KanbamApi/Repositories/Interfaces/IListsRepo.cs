@@ -9,7 +9,7 @@ namespace KanbamApi.Repositories.Interfaces;
 public interface IListsRepo
 {
     Task<List<List>> GetListsWithCardsByUserId(string userId);
-    Task CreateAsync(List newList);
+    Task<List> CreateAsync(List newList);
     Task UpdateAsync(string id, List updatedList);
     Task RemoveAsync(string id);
 }

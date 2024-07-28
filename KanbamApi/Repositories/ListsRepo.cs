@@ -36,9 +36,10 @@ public class ListsRepo : IListsRepo
         return await cursor.ToListAsync();
     }
 
-    public async Task CreateAsync(List newList)
+    public async Task<List> CreateAsync(List newList)
     {
         await _kanbamDbContext.ListsCollection.InsertOneAsync(newList);
+        return newList;
     }
 
     public async Task UpdateAsync(string id, List updatedList)
