@@ -63,8 +63,8 @@ public class CardsController : ControllerBase
                     IndexNumber = newCard.IndexNumber,
                 };
 
-            await _cardsRepo.CreateAsync(card);
-            return CreatedAtAction(nameof(CreateNewCard), new { }, newCard);
+            var createdCard = await _cardsRepo.CreateAsync(card);
+            return CreatedAtAction(nameof(CreateNewCard), new { id = createdCard.Id }, createdCard);
         }
         catch (Exception)
         {
