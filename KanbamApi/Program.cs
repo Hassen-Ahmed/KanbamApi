@@ -152,8 +152,8 @@ app.UseAuthentication();
 
 app.UseAuthorization();
 
-app.UseMiddleware<RequestTrackerMiddleware>();
-
 app.MapControllers();
+
+app.UseMiddleware<RequestTrackerMiddleware>();
 
 app.Run();
