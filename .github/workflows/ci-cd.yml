@@ -56,6 +56,7 @@ jobs:
           echo "USERS_COLLECTION_NAME=${{secrets.USERS_COLLECTION_NAME}}" >> $GITHUB_ENV
           echo "LISTS_COLLECTION_NAME=${{secrets.LISTS_COLLECTION_NAME}}" >> $GITHUB_ENV
           echo "CARDS_COLLECTION_NAME=${{secrets.CARDS_COLLECTION_NAME}}" >> $GITHUB_ENV
+          echo "VISITORS_COLLECTION_NAME=${{secrets.VISITORS_COLLECTION_NAME}}" >> $GITHUB_ENV
           echo "TOKEN_KEY=${{secrets.TOKEN_KEY}}" >> $GITHUB_ENV
           echo "PASSWORD_KEY=${{secrets.PASSWORD_KEY}}" >> $GITHUB_ENV
 
