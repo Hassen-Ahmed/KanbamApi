@@ -10,7 +10,6 @@ public class KanbamDbContext : IKanbamDbContext
     private readonly IMongoCollection<List> _listsCollection;
     private readonly IMongoCollection<User> _usersCollection;
     private readonly IMongoCollection<Auth> _authCollection;
-    private readonly IMongoCollection<Visitor> _visitorsCollection;
 
     public KanbamDbContext()
     {
@@ -33,14 +32,10 @@ public class KanbamDbContext : IKanbamDbContext
         _authCollection = kanbamDatabase.GetCollection<Auth>(
             DotNetEnv.Env.GetString("AUTH_COLLECTION_NAME")
         );
-        _visitorsCollection = kanbamDatabase.GetCollection<Visitor>(
-            DotNetEnv.Env.GetString("VISITORS_COLLECTION_NAME")
-        );
     }
 
     public IMongoCollection<Card> CardsCollection => _cardsCollection;
     public IMongoCollection<List> ListsCollection => _listsCollection;
     public IMongoCollection<User> UsersCollection => _usersCollection;
     public IMongoCollection<Auth> AuthCollection => _authCollection;
-    public IMongoCollection<Visitor> VisitorsCollection => _visitorsCollection;
 }

@@ -30,8 +30,20 @@ public class Card
     [BsonElement("Comments")]
     public List<string>? Comments { get; set; }
 
+    [BsonElement("StartDate")]
+    public DateTime? StartDate { get; set; }
+
+    [BsonElement("DueDate")]
+    public DateTime? DueDate { get; set; }
+
+    [BsonElement("DueDateReminder")]
+    public DateTime? DueDateReminder { get; set; }
+
     public Card()
     {
         Comments ??= [];
+        StartDate = DateTime.Now;
+        DueDate = DateTime.Now;
+        DueDateReminder = DateTime.Now;
     }
 }
