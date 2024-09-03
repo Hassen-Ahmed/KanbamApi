@@ -3,7 +3,6 @@ using FluentValidation;
 using KanbamApi.Data;
 using KanbamApi.Data.Interfaces;
 using KanbamApi.Data.Seed;
-using KanbamApi.Middleware;
 using KanbamApi.Models.AuthModels;
 using KanbamApi.Repositories;
 using KanbamApi.Repositories.Interfaces;
@@ -41,7 +40,6 @@ builder.Services.AddScoped<IAuthRepo, AuthRepo>();
 builder.Services.AddScoped<IUsersRepo, UsersRepo>();
 builder.Services.AddScoped<IListsRepo, ListsRepo>();
 builder.Services.AddScoped<ICardsRepo, CardsRepo>();
-builder.Services.AddSingleton<IVisitorsRepo, VisitorsRepo>();
 
 builder.Services.AddScoped<IMongoDbSeeder, MongoDbSeeder>();
 
@@ -153,7 +151,5 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
-app.UseMiddleware<RequestTrackerMiddleware>();
 
 app.Run();
