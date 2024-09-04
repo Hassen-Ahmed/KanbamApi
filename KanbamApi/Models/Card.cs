@@ -42,8 +42,5 @@ public class Card
     public Card()
     {
         Comments ??= [];
-        StartDate = DateTime.Now;
-        DueDate = DateTime.Now;
-        DueDateReminder = DateTime.Now;
     }
 }
