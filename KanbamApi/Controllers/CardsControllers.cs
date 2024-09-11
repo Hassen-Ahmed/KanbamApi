@@ -63,6 +63,12 @@ public class CardsController : ControllerBase
                     IndexNumber = newCard.IndexNumber,
                 };
 
+            if (newCard.StartDate is not null && newCard.DueDate is not null)
+            {
+                card.StartDate = newCard.StartDate;
+                card.DueDate = newCard.DueDate;
+            }
+
             var createdCard = await _cardsRepo.CreateAsync(card);
             return StatusCode(201, createdCard);
         }
