@@ -7,8 +7,10 @@ using KanbamApi.Controllers;
 using KanbamApi.Models;
 using KanbamApi.Models.AuthModels;
 using KanbamApi.Repositories.Interfaces;
+using KanbamApi.Services.Interfaces;
 using KanbamApi.Util.Generators.SecureData.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson;
 using Moq;
 
 namespace Kanbam.Test.UnitTestings.Controllers;
@@ -16,7 +18,7 @@ namespace Kanbam.Test.UnitTestings.Controllers;
 public class TestLoginAuthController : TestBase
 {
     private readonly Mock<IAuthRepo> _authRepoMock;
-    private readonly Mock<IUsersRepo> _userRepoMock;
+    private readonly Mock<IUsersService> _usersServiceMock;
     private readonly Mock<IAuthData> _authControllerServiceMock;
     private readonly AuthController _authController;
     private readonly Mock<IValidator<UserLogin>> _validatLoginMock;
@@ -24,14 +26,14 @@ public class TestLoginAuthController : TestBase
     public TestLoginAuthController()
     {
         _authRepoMock = new Mock<IAuthRepo>();
-        _userRepoMock = new Mock<IUsersRepo>();
+        _usersServiceMock = new Mock<IUsersService>();
         _authControllerServiceMock = new Mock<IAuthData>();
         _validatLoginMock = new Mock<IValidator<UserLogin>>();
 
         _authController = new AuthController(
             null!,
             _authRepoMock.Object,
-            _userRepoMock.Object,
+            _usersServiceMock.Object,
             _authControllerServiceMock.Object,
             _validatLoginMock.Object
         );
@@ -59,11 +61,9 @@ public class TestLoginAuthController : TestBase
             );
 
         _authRepoMock.Setup(a => a.CreateAsync(It.IsAny<Auth>())).ReturnsAsync(true);
-
-        _userRepoMock
-            .Setup(u => u.GetUserIdAsync(It.IsAny<string>()))
+        _usersServiceMock
+            .Setup(u => u.GetUserIdByEmail(It.IsAny<string>()))
             .ReturnsAsync("userIdLength>0");
-
         _authControllerServiceMock
             .Setup(a => a.GeneratePasswordHash(It.IsAny<string>(), It.IsAny<byte[]>()))
             .Returns(new byte[128 / 8]);
@@ -110,8 +110,8 @@ public class TestLoginAuthController : TestBase
 
         _authRepoMock.Setup(a => a.CreateAsync(It.IsAny<Auth>())).ReturnsAsync(true);
 
-        _userRepoMock
-            .Setup(u => u.GetUserIdAsync(It.IsAny<string>()))
+        _usersServiceMock
+            .Setup(u => u.GetUserIdByEmail(It.IsAny<string>()))
             .ReturnsAsync("userIdLength>0");
 
         _authControllerServiceMock
@@ -144,8 +144,8 @@ public class TestLoginAuthController : TestBase
 
         _authRepoMock.Setup(a => a.CreateAsync(It.IsAny<Auth>())).ReturnsAsync(true);
 
-        _userRepoMock
-            .Setup(u => u.GetUserIdAsync(It.IsAny<string>()))
+        _usersServiceMock
+            .Setup(u => u.GetUserIdByEmail(It.IsAny<string>()))
             .ReturnsAsync("userIdLength>0");
 
         _authControllerServiceMock
@@ -187,8 +187,8 @@ public class TestLoginAuthController : TestBase
 
         _authRepoMock.Setup(a => a.CreateAsync(It.IsAny<Auth>())).ReturnsAsync(true);
 
-        _userRepoMock
-            .Setup(u => u.GetUserIdAsync(It.IsAny<string>()))
+        _usersServiceMock
+            .Setup(u => u.GetUserIdByEmail(It.IsAny<string>()))
             .ReturnsAsync("userIdLength>0");
 
         _authControllerServiceMock
@@ -230,7 +230,7 @@ public class TestLoginAuthController : TestBase
 
         _authRepoMock.Setup(a => a.CreateAsync(It.IsAny<Auth>())).ReturnsAsync(true);
 
-        _userRepoMock.Setup(u => u.GetUserIdAsync(It.IsAny<string>())).ReturnsAsync("");
+        _usersServiceMock.Setup(u => u.GetUserIdByEmail(It.IsAny<string>())).ReturnsAsync("");
 
         _authControllerServiceMock
             .Setup(a => a.GeneratePasswordHash(It.IsAny<string>(), It.IsAny<byte[]>()))
