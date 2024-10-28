@@ -4,6 +4,11 @@ namespace KanbamApi.Repositories.Interfaces;
 
 public interface IUsersRepo
 {
-    Task<string> GetUserIdAsync(string? email);
-    Task<bool> CreateNewUserAsync(User newUser);
+    Task<List<User>> GetAll();
+    Task<List<User>> GetById(string id);
+
+    Task<string> GetUserIdByEmail(string? email);
+    Task<string> Create(User newUser);
+    Task<bool> Patch(string id, User newUser);
+    Task<bool> RemoveById(string id);
 }

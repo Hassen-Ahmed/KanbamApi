@@ -1,15 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using KanbamApi.Dtos.Update;
 using KanbamApi.Models;
 
 namespace KanbamApi.Repositories.Interfaces;
 
 public interface IListsRepo
 {
-    Task<List<List>> GetListsWithCardsByUserId(string userId);
-    Task<List> CreateAsync(List newList);
-    Task UpdateAsync(string id, List updatedList);
-    Task RemoveAsync(string id);
+    Task<List<List>> GetAll();
+    Task<List<List>> GetAllByBoardId(string boardId);
+    Task<List> Create(List newList);
+    Task<bool> Patch(string id, DtoListsUpdate dtoListsUpdate);
+
+    Task<bool> Remove(string id);
 }
