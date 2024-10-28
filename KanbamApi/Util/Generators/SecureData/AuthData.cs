@@ -40,7 +40,7 @@ public class AuthData : IAuthData
             {
                 Subject = new ClaimsIdentity(claims),
                 SigningCredentials = credentials,
-                Expires = DateTime.Now.AddDays(1),
+                Expires = DateTime.Now.AddDays(7),
 
                 // uncomment after host this API
                 // Issuer =  DotNetEnv.Env.GetString("VALID_ISSUER"),
