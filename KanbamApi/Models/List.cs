@@ -8,24 +8,17 @@ public class List
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
-    public string? Id { get; set; }
+    public string Id { get; set; }
 
-    [BsonElement("UserId")]
-    public string? UserId { get; set; }
+    [BsonRepresentation(BsonType.ObjectId)]
+    [BsonElement("BoardId")]
+    public string BoardId { get; set; }
 
     [BsonRequired]
     [BsonElement("Title")]
-    public string? Title { get; set; }
+    public string Title { get; set; }
 
     [BsonRequired]
     [BsonElement("IndexNumber")]
     public int IndexNumber { get; set; }
-
-    [BsonElement("Cards")]
-    public List<Card>? Cards { get; set; }
-
-    public List()
-    {
-        Cards ??= [];
-    }
 }

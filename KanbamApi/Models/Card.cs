@@ -8,14 +8,14 @@ public class Card
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
-    public string? Id { get; set; }
+    public string Id { get; set; }
 
     [BsonRepresentation(BsonType.ObjectId)]
-    public string? ListId { get; set; }
+    public string ListId { get; set; }
 
     [BsonRequired]
     [BsonElement("Title")]
-    public string? Title { get; set; }
+    public string Title { get; set; }
 
     [BsonRequired]
     [BsonElement("IndexNumber")]

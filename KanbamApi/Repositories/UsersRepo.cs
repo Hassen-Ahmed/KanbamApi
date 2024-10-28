@@ -9,26 +9,69 @@ public class UsersRepo : IUsersRepo
 {
     private readonly IKanbamDbContext _kanbamDbContext;
 
-    public UsersRepo(IKanbamDbContext kanbamDbContext)
+    public UsersRepo(IKanbamDbContext kanbamDbContext) => _kanbamDbContext = kanbamDbContext;
+
+    public async Task<List<User>> GetAll()
     {
-        _kanbamDbContext = kanbamDbContext;
+        var filter = Builders<User>.Filter.Empty;
+        return await _kanbamDbContext.UsersCollection.FindSync(filter).ToListAsync();
     }
 
-    public async Task<string> GetUserIdAsync(string? email)
+    public async Task<List<User>> GetById(string id)
+    {
+        var filter = Builders<User>.Filter.Eq(u => u.Id, id);
+        return await _kanbamDbContext.UsersCollection.FindSync(filter).ToListAsync();
+    }
+
+    public async Task<string> GetUserIdByEmail(string? email)
     {
         var filter = Builders<User>.Filter.Eq(u => u.Email, email);
         var res = await _kanbamDbContext.UsersCollection.Find(filter).FirstOrDefaultAsync();
-        var userId = res.Id;
 
-        return userId is not null ? userId : "";
+        return res is null ? "" : res.Id;
     }
 
-    public async Task<bool> CreateNewUserAsync(User newUser)
+    public async Task<string> Create(User newUser)
     {
         await _kanbamDbContext.UsersCollection.InsertOneAsync(newUser);
+        return newUser.Id;
+    }
 
-        var res = await GetUserIdAsync(newUser.Email);
+    public async Task<bool> Patch(string id, User newUser)
+    {
+        var updateDefinitionBuilder = Builders<User>.Update;
+        var updateDefinition = new List<UpdateDefinition<User>>();
 
-        return res is null ? false : true;
+        if (!string.IsNullOrEmpty(newUser.Email))
+        {
+            updateDefinition.Add(updateDefinitionBuilder.Set(u => u.Email, newUser.Email));
+        }
+
+        if (!string.IsNullOrEmpty(newUser.UserName))
+        {
+            updateDefinition.Add(updateDefinitionBuilder.Set(u => u.UserName, newUser.UserName));
+        }
+
+        if (updateDefinition.Count == 0)
+        {
+            return false;
+        }
+
+        var filter = Builders<User>.Filter.Eq(u => u.Id, id);
+
+        var result = await _kanbamDbContext.UsersCollection.UpdateOneAsync(
+            filter,
+            updateDefinitionBuilder.Combine(updateDefinition)
+        );
+
+        return result.ModifiedCount > 0;
+    }
+
+    public async Task<bool> RemoveById(string id)
+    {
+        var filter = Builders<User>.Filter.Eq(u => u.Id, id);
+        var res = await _kanbamDbContext.UsersCollection.DeleteOneAsync(filter);
+
+        return res.DeletedCount > 0;
     }
 }

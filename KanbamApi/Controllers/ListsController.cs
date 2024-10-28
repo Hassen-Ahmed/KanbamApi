@@ -1,8 +1,6 @@
 using KanbamApi.Dtos;
-using KanbamApi.Models;
-using KanbamApi.Repositories;
-using KanbamApi.Repositories.Interfaces;
-using KanbamApi.Services;
+using KanbamApi.Dtos.Update;
+using KanbamApi.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
@@ -14,100 +12,86 @@ namespace KanbamApi.Controllers;
 [Route("api/[controller]")]
 public class ListsController : ControllerBase
 {
-    private readonly IListsRepo _listsRepo;
-    private readonly ICardsRepo _cardsRepo;
+    private readonly IListsService _listsService;
 
-    public ListsController(IListsRepo listsRepo, ICardsRepo cardsRepo)
-    {
-        _listsRepo = listsRepo;
-        _cardsRepo = cardsRepo;
-    }
+    public ListsController(IListsService listsService) => _listsService = listsService;
 
-    [Authorize(Roles = "User")]
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<object>>> GetListsWithCardsByUserId()
+    public async Task<ActionResult> GetAllList()
     {
         try
         {
-            var userId = User.FindFirst("userId")?.Value;
-            var res = await _listsRepo.GetListsWithCardsByUserId(userId!);
-            return Ok(res);
+            var lists = await _listsService.GetAllAsync();
+            return Ok(new Dictionary<string, object> { { "lists", lists } });
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return StatusCode(
-                StatusCodes.Status500InternalServerError,
-                "An error occurred while processing the request."
-            );
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
         }
     }
 
-    [Authorize]
+    [HttpGet("{boardId}")]
+    public async Task<ActionResult> GetAllListByBoardId(string boardId)
+    {
+        if (!ObjectId.TryParse(boardId, out var _))
+        {
+            return BadRequest("Invalid boardId.");
+        }
+        try
+        {
+            var lists = await _listsService.GetAllByBoardIdAsync(boardId);
+            return Ok(new Dictionary<string, object> { { "lists", lists } });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+        }
+    }
+
     [HttpPost]
-    public async Task<IActionResult> CreateList(DtoListPost newList)
+    public async Task<IActionResult> CreateList(DtoListPost newListDto)
     {
         try
         {
-            var userId = User.FindFirst("userId")?.Value;
-            List list =
-                new()
-                {
-                    UserId = userId,
-                    Title = newList.Title,
-                    IndexNumber = newList.IndexNumber
-                };
-
-            var createdList = await _listsRepo.CreateAsync(list);
+            var createdList = await _listsService.CreateAsync(newListDto);
             return StatusCode(201, createdList);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return StatusCode(
-                StatusCodes.Status500InternalServerError,
-                "An error occurred while processing the request."
-            );
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
         }
     }
 
-    [Authorize]
-    [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateList(string id, List updatedList)
+    [HttpPatch("{listId}")]
+    public async Task<IActionResult> UpdateList(string listId, DtoListsUpdate dtoListsUpdate)
     {
-        try
+        if (!ObjectId.TryParse(listId, out var _))
         {
-            var userId = User.FindFirst("userId")?.Value;
-            updatedList.Id = id;
-            updatedList.UserId = userId;
+            return BadRequest("Invalid listId.");
+        }
+        var updated = await _listsService.PatchByIdAsync(listId, dtoListsUpdate);
 
-            await _listsRepo.UpdateAsync(id, updatedList);
-            return CreatedAtAction(nameof(UpdateList), new { id = updatedList.Id }, updatedList);
-        }
-        catch (Exception)
-        {
-            return StatusCode(
-                StatusCodes.Status500InternalServerError,
-                "An error occurred while processing the request."
-            );
-        }
+        if (!updated)
+            return NotFound("List not found or nothing to update.");
+
+        return NoContent();
     }
 
-    [Authorize]
     [HttpDelete("{listId}")]
-    public async Task<IActionResult> RemoveList(string listId)
+    public async Task<IActionResult> Delete(string listId)
     {
+        if (!ObjectId.TryParse(listId, out var _))
+        {
+            return BadRequest("Invalid listId.");
+        }
         try
         {
-            await _listsRepo.RemoveAsync(listId);
-            await _cardsRepo.RemoveManyByListIdAsync(listId);
-
-            return NoContent();
+            var res = await _listsService.RemoveByIdAsync(listId);
+            return res ? NoContent() : BadRequest();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return StatusCode(
-                StatusCodes.Status500InternalServerError,
-                "An error occurred while processing the request."
-            );
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
         }
     }
 }

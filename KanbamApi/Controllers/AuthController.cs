@@ -4,6 +4,7 @@ using FluentValidation.Results;
 using KanbamApi.Models;
 using KanbamApi.Models.AuthModels;
 using KanbamApi.Repositories.Interfaces;
+using KanbamApi.Services.Interfaces;
 using KanbamApi.Util.Generators.SecureData.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,21 +18,21 @@ public class AuthController : ControllerBase
 {
     private readonly IValidator<UserLogin> _validatorLogin;
     private readonly IValidator<UserRegistration> _validatorRegistration;
-    private readonly IUsersRepo _usersRepo;
+    private readonly IUsersService _usersService;
     private readonly IAuthRepo _authRepo;
     private readonly IAuthData _authControllerService;
 
     public AuthController(
         IValidator<UserRegistration> validatorRegistration,
         IAuthRepo authRepo,
-        IUsersRepo usersRepo,
+        IUsersService usersService,
         IAuthData authControllerService,
         IValidator<UserLogin> validatorLogin
     )
     {
         _validatorRegistration = validatorRegistration;
         _authRepo = authRepo;
-        _usersRepo = usersRepo;
+        _usersService = usersService;
         _authControllerService = authControllerService;
         _validatorLogin = validatorLogin;
     }
@@ -80,7 +81,7 @@ public class AuthController : ControllerBase
             };
 
         var isAuthCreated = await _authRepo.CreateAsync(authEntity);
-        var isUserCreated = await _usersRepo.CreateNewUserAsync(newUser);
+        var isUserCreated = await _usersService.CreateAsync(newUser);
 
         var succefulRegistration = new Dictionary<string, object>
         {
@@ -98,7 +99,7 @@ public class AuthController : ControllerBase
             }
         };
 
-        if (isUserCreated && isAuthCreated)
+        if (isUserCreated is not null && isAuthCreated)
             return CreatedAtAction(
                 nameof(Register),
                 new { id = authEntity.Email },
@@ -134,7 +135,7 @@ public class AuthController : ControllerBase
             if (passwordHash[i] != res.PasswordHash[i])
                 return StatusCode(401, "Unauthorized Request!");
 
-        var userId = await _usersRepo.GetUserIdAsync(userLogin.Email);
+        var userId = await _usersService.GetUserIdByEmail(userLogin.Email!);
 
         if (userId.Length == 0)
             return StatusCode(401, "Unauthorized User!");

@@ -9,4 +9,10 @@ public interface IKanbamDbContext
     IMongoCollection<List> ListsCollection { get; }
     IMongoCollection<User> UsersCollection { get; }
     IMongoCollection<Auth> AuthCollection { get; }
+    IMongoCollection<Board> BoardsCollection { get; }
+    IMongoCollection<BoardMember> BoardMembersCollection { get; }
+    IMongoCollection<Workspace> WorkspacesCollection { get; }
+    IMongoCollection<WorkspaceMember> WorkspaceMembersCollection { get; }
+    IMongoDatabase KanbamDatabase { get; }
+    IMongoClient MongoClient { get; }
 }

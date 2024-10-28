@@ -3,14 +3,19 @@ using FluentValidation;
 using KanbamApi.Data;
 using KanbamApi.Data.Interfaces;
 using KanbamApi.Data.Seed;
+using KanbamApi.Models;
 using KanbamApi.Models.AuthModels;
 using KanbamApi.Repositories;
 using KanbamApi.Repositories.Interfaces;
+using KanbamApi.Services;
+using KanbamApi.Services.Interfaces;
+using KanbamApi.Util;
 using KanbamApi.Util.Generators.SecureData;
 using KanbamApi.Util.Generators.SecureData.Interfaces;
 using KanbamApi.Util.Validators.AuthValidators;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,11 +41,26 @@ builder.Services.AddScoped<IValidator<UserRegistration>, UserRegistrationValidat
 
 builder.Services.AddScoped<IAuthData, AuthData>();
 
+// Repos
 builder.Services.AddScoped<IAuthRepo, AuthRepo>();
 builder.Services.AddScoped<IUsersRepo, UsersRepo>();
 builder.Services.AddScoped<IListsRepo, ListsRepo>();
 builder.Services.AddScoped<ICardsRepo, CardsRepo>();
+builder.Services.AddScoped<IBoardsRepo, BoardsRepo>();
+builder.Services.AddScoped<IBoardMemberRepo, BoardMemberRepo>();
+builder.Services.AddScoped<IWorkspacesRepo, WorkspacesRepo>();
+builder.Services.AddScoped<IWorkspaceMembersRepo, WorkspaceMembersRepo>();
 
+// Services
+builder.Services.AddScoped<IUsersService, UsersService>();
+builder.Services.AddScoped<ICardsService, CardsService>();
+builder.Services.AddScoped<IListsService, ListsService>();
+builder.Services.AddScoped<IBoardService, BoardService>();
+builder.Services.AddScoped<IBoardMemberService, BoardMemberService>();
+builder.Services.AddScoped<IWorkspaceService, WorkspaceService>();
+builder.Services.AddScoped<IWorkspaceMemberService, WorkspaceMemberService>();
+
+// Seeding for testing
 builder.Services.AddScoped<IMongoDbSeeder, MongoDbSeeder>();
 
 builder.Services.AddControllers();

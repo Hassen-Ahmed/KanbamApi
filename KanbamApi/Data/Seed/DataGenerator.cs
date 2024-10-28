@@ -36,10 +36,9 @@ public class DataGenerator
     {
         var fakerLists = new Faker<List>()
             .RuleFor(l => l.Id, f => $"{ObjectId.GenerateNewId()}")
-            .RuleFor(l => l.UserId, f => f.PickRandom(_userIds))
+            .RuleFor(l => l.BoardId, f => f.PickRandom(_userIds))
             .RuleFor(l => l.Title, f => f.Lorem.Sentence())
             .RuleFor(l => l.IndexNumber, f => f.IndexFaker)
-            .RuleFor(l => l.Cards, f => new List<Card>())
             .FinishWith((f, l) => _listIds.Add(l.Id!));
 
         return fakerLists.Generate(count);
@@ -55,6 +54,27 @@ public class DataGenerator
             .RuleFor(c => c.Description, f => f.Lorem.Paragraph())
             .RuleFor(c => c.Priority, f => "")
             .RuleFor(l => l.Comments, f => new List<string>());
+
+        return fakerCards.Generate(count);
+    }
+
+    public List<Workspace> GenerateWorkspaces(int count)
+    {
+        var fakerCards = new Faker<Workspace>()
+            .RuleFor(c => c.Id, f => $"{ObjectId.GenerateNewId()}")
+            .RuleFor(c => c.Name, f => f.Lorem.Word())
+            .RuleFor(c => c.Description, f => f.Lorem.Paragraph());
+
+        return fakerCards.Generate(count);
+    }
+
+    public List<WorkspaceMember> GenerateWorkspaceMembers(int count)
+    {
+        var fakerCards = new Faker<WorkspaceMember>()
+            .RuleFor(c => c.Id, f => $"{ObjectId.GenerateNewId()}")
+            .RuleFor(c => c.UserId, f => $"{ObjectId.GenerateNewId()}")
+            .RuleFor(c => c.WorkspaceId, f => $"{ObjectId.GenerateNewId()}")
+            .RuleFor(c => c.Role, f => f.Lorem.Word());
 
         return fakerCards.Generate(count);
     }

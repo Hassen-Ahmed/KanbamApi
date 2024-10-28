@@ -7,8 +7,10 @@ using KanbamApi.Controllers;
 using KanbamApi.Models;
 using KanbamApi.Models.AuthModels;
 using KanbamApi.Repositories.Interfaces;
+using KanbamApi.Services.Interfaces;
 using KanbamApi.Util.Generators.SecureData.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson;
 using Moq;
 
 namespace Kanbam.Test.UnitTestings.Controllers;
@@ -17,7 +19,7 @@ public class TestRegisterAuthController : TestBase
 {
     private readonly Mock<IValidator<UserRegistration>> _validatUserRegMock;
     private readonly Mock<IAuthRepo> _authRepoMock;
-    private readonly Mock<IUsersRepo> _userRepoMock;
+    private readonly Mock<IUsersService> _usersServiceMock;
     private readonly Mock<IAuthData> _authControllerServiceMock;
     private readonly AuthController _authController;
 
@@ -25,13 +27,14 @@ public class TestRegisterAuthController : TestBase
     {
         _validatUserRegMock = new Mock<IValidator<UserRegistration>>();
         _authRepoMock = new Mock<IAuthRepo>();
-        _userRepoMock = new Mock<IUsersRepo>();
+        // _userRepoMock = new Mock<IUsersRepo>();
+        _usersServiceMock = new Mock<IUsersService>();
         _authControllerServiceMock = new Mock<IAuthData>();
 
         _authController = new AuthController(
             _validatUserRegMock.Object,
             _authRepoMock.Object,
-            _userRepoMock.Object,
+            _usersServiceMock.Object,
             _authControllerServiceMock.Object,
             null!
         );
@@ -50,7 +53,9 @@ public class TestRegisterAuthController : TestBase
         _authRepoMock.Setup(a => a.CheckEmailExist(It.IsAny<string>())).ReturnsAsync((Auth)null!);
         _authRepoMock.Setup(a => a.CreateAsync(It.IsAny<Auth>())).ReturnsAsync(true);
 
-        _userRepoMock.Setup(u => u.CreateNewUserAsync(It.IsAny<User>())).ReturnsAsync(true);
+        _usersServiceMock
+            .Setup(u => u.CreateAsync(It.IsAny<User>()))
+            .ReturnsAsync("671e4578ed4807a0a203a540");
 
         _authControllerServiceMock
             .Setup(a => a.GeneratePasswordHash(It.IsAny<string>(), It.IsAny<byte[]>()))
@@ -90,7 +95,9 @@ public class TestRegisterAuthController : TestBase
         _authRepoMock.Setup(a => a.CheckEmailExist(It.IsAny<string>())).ReturnsAsync((Auth)null!);
         _authRepoMock.Setup(a => a.CreateAsync(It.IsAny<Auth>())).ReturnsAsync(true);
 
-        _userRepoMock.Setup(u => u.CreateNewUserAsync(It.IsAny<User>())).ReturnsAsync(true);
+        _usersServiceMock
+            .Setup(u => u.CreateAsync(It.IsAny<User>()))
+            .ReturnsAsync("671e4578ed4807a0a203a540");
 
         _authControllerServiceMock
             .Setup(a => a.GeneratePasswordHash(It.IsAny<string>(), It.IsAny<byte[]>()))
@@ -118,7 +125,9 @@ public class TestRegisterAuthController : TestBase
         _authRepoMock.Setup(a => a.CheckEmailExist(It.IsAny<string>())).ReturnsAsync(new Auth());
         _authRepoMock.Setup(a => a.CreateAsync(It.IsAny<Auth>())).ReturnsAsync(true);
 
-        _userRepoMock.Setup(u => u.CreateNewUserAsync(It.IsAny<User>())).ReturnsAsync(true);
+        _usersServiceMock
+            .Setup(u => u.CreateAsync(It.IsAny<User>()))
+            .ReturnsAsync("671e4578ed4807a0a203a540");
 
         _authControllerServiceMock
             .Setup(a => a.GeneratePasswordHash(It.IsAny<string>(), It.IsAny<byte[]>()))
@@ -147,7 +156,9 @@ public class TestRegisterAuthController : TestBase
         _authRepoMock.Setup(a => a.CheckEmailExist(It.IsAny<string>())).ReturnsAsync((Auth)null!);
         _authRepoMock.Setup(a => a.CreateAsync(It.IsAny<Auth>())).ReturnsAsync(false);
 
-        _userRepoMock.Setup(u => u.CreateNewUserAsync(It.IsAny<User>())).ReturnsAsync(false);
+        _usersServiceMock
+            .Setup(u => u.CreateAsync(It.IsAny<User>()))
+            .ReturnsAsync("671e4578ed4807a0a203a540");
 
         _authControllerServiceMock
             .Setup(a => a.GeneratePasswordHash(It.IsAny<string>(), It.IsAny<byte[]>()))

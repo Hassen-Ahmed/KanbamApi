@@ -59,6 +59,7 @@ jobs:
           echo "VISITORS_COLLECTION_NAME=${{secrets.VISITORS_COLLECTION_NAME}}" >> $GITHUB_ENV
           echo "TOKEN_KEY=${{secrets.TOKEN_KEY}}" >> $GITHUB_ENV
           echo "PASSWORD_KEY=${{secrets.PASSWORD_KEY}}" >> $GITHUB_ENV
+          echo "PASSWORD_KEY=${{secrets.SECRET_KEY}}" >> $GITHUB_ENV
 
       - name: Run Tests
         working-directory: Kanbam.Test

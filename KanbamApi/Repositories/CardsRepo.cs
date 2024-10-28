@@ -1,4 +1,5 @@
 using KanbamApi.Data.Interfaces;
+using KanbamApi.Dtos.Update;
 using KanbamApi.Models;
 using KanbamApi.Repositories.Interfaces;
 using MongoDB.Driver;
@@ -14,39 +15,65 @@ public class CardsRepo : ICardsRepo
         _kanbamDbContext = kanbamDbContext;
     }
 
-    public async Task<List<Card>> GetByListIdAsync(string listId)
+    public async Task<List<Card>> GetById(string id)
+    {
+        var filter = Builders<Card>.Filter.Eq(c => c.Id, id);
+        return await _kanbamDbContext.CardsCollection.FindSync(filter).ToListAsync();
+    }
+
+    public async Task<List<Card>> GetByListId(string listId)
     {
         var filter = Builders<Card>.Filter.Eq(c => c.ListId, listId);
         return await _kanbamDbContext.CardsCollection.FindSync(filter).ToListAsync();
     }
 
-    public async Task<List<Card>> GetByCardIdAsync(string cardId)
-    {
-        var filter = Builders<Card>.Filter.Eq(c => c.Id, cardId);
-        return await _kanbamDbContext.CardsCollection.FindSync(filter).ToListAsync();
-    }
-
-    public async Task<Card> CreateAsync(Card newCard)
+    public async Task<Card> Create(Card newCard)
     {
         await _kanbamDbContext.CardsCollection.InsertOneAsync(newCard);
         return newCard;
     }
 
-    public async Task UpdateAsync(string id, Card updatedCard)
+    public async Task<bool> Patch(string id, DtoCardUpdate dtoCardUpdate)
     {
-        var filter = Builders<Card>.Filter.Eq(c => c.Id, id);
-        await _kanbamDbContext.CardsCollection.ReplaceOneAsync(filter, updatedCard);
+        var updateDefinitionBuilder = Builders<Card>.Update;
+        var updateDefinitions = new List<UpdateDefinition<Card>>();
+
+        foreach (var property in typeof(DtoCardUpdate).GetProperties())
+        {
+            var value = property.GetValue(dtoCardUpdate);
+
+            if (value != null)
+            {
+                var update = updateDefinitionBuilder.Set(property.Name, value);
+                updateDefinitions.Add(update);
+            }
+        }
+
+        if (!updateDefinitions.Any())
+        {
+            return false;
+        }
+
+        var combinedUpdate = updateDefinitionBuilder.Combine(updateDefinitions);
+        var result = await _kanbamDbContext.CardsCollection.UpdateOneAsync(
+            card => card.Id == id,
+            combinedUpdate
+        );
+
+        return result.ModifiedCount > 0;
     }
 
-    public async Task RemoveAsync(string id)
+    public async Task<bool> RemoveById(string id)
     {
         var filter = Builders<Card>.Filter.Eq(c => c.Id, id);
-        await _kanbamDbContext.CardsCollection.DeleteOneAsync(filter);
+        var res = await _kanbamDbContext.CardsCollection.DeleteOneAsync(filter);
+        return res.DeletedCount > 0;
     }
 
-    public async Task RemoveManyByListIdAsync(string listId)
+    public async Task<bool> RemoveByListId(string listId)
     {
         var filter = Builders<Card>.Filter.Eq(c => c.ListId, listId);
-        await _kanbamDbContext.CardsCollection.DeleteManyAsync(filter);
+        var res = await _kanbamDbContext.CardsCollection.DeleteManyAsync(filter);
+        return res.DeletedCount > 0;
     }
 }
