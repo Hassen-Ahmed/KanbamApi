@@ -9,19 +9,19 @@ namespace KanbamApi.Models
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         [Required]
-        public string Id { get; set; }
+        public string Id { get; set; } = string.Empty;
 
         [BsonRepresentation(BsonType.ObjectId)]
         [BsonElement("UserId")]
         [Required]
-        public string UserId { get; set; }
+        public string UserId { get; set; } = string.Empty;
 
         [BsonRepresentation(BsonType.ObjectId)]
         [BsonElement("BoardId")]
         [Required]
-        public string BoardId { get; set; }
+        public string BoardId { get; set; } = string.Empty;
 
         [BsonElement("Role")]
-        public string Role { get; set; }
+        public string Role { get; set; } = string.Empty;
     }
 }

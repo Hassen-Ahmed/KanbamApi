@@ -11,11 +11,11 @@ namespace KanbamApi.Dtos.Posts
     {
         [BsonRequired]
         [Required]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         [BsonRequired]
         [Required]
-        public string WorkspaceId { get; set; }
+        public string WorkspaceId { get; set; } = string.Empty;
         public string? Description { get; set; }
     }
 }

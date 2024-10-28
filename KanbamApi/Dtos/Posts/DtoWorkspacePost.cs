@@ -12,7 +12,7 @@ namespace KanbamApi.Dtos.Posts
         [BsonRequired]
         [BsonElement("Name")]
         [Required]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         [BsonElement("Description")]
         public string? Description { get; set; }

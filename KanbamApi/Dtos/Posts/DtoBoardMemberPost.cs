@@ -5,9 +5,9 @@ namespace KanbamApi.Dtos.Posts
     public class DtoBoardMemberPost
     {
         [Required]
-        public string BoardId { get; set; }
+        public string BoardId { get; set; } = string.Empty;
 
         [Required]
-        public string Role { get; set; }
+        public string Role { get; set; } = string.Empty;
     }
 }

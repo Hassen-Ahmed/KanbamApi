@@ -9,10 +9,10 @@ public class User
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     [Required]
-    public string Id { get; set; }
+    public string Id { get; set; } = string.Empty;
 
     [BsonRequired]
     [BsonElement("Email")]
-    public string? Email { get; set; } = null!;
-    public string? UserName { get; set; } = null!;
+    public string? Email { get; set; }
+    public string? UserName { get; set; }
 }

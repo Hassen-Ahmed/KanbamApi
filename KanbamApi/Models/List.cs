@@ -10,17 +10,17 @@ public class List
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     [Required]
-    public string Id { get; set; }
+    public string Id { get; set; } = string.Empty;
 
     [BsonRepresentation(BsonType.ObjectId)]
     [BsonElement("BoardId")]
     [Required]
-    public string BoardId { get; set; }
+    public string BoardId { get; set; } = string.Empty;
 
     [BsonRequired]
     [BsonElement("Title")]
     [Required]
-    public string Title { get; set; }
+    public string Title { get; set; } = string.Empty;
 
     [BsonRequired]
     [BsonElement("IndexNumber")]

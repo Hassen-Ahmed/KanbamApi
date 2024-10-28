@@ -5,8 +5,8 @@ namespace KanbamApi.Dtos;
 public class DtoListPost
 {
     [Required]
-    public string Title { get; set; }
+    public string Title { get; set; } = string.Empty;
 
     [Required]
-    public string BoardId { get; set; }
+    public string BoardId { get; set; } = string.Empty;
 }

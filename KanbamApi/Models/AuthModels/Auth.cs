@@ -9,7 +9,7 @@ public class Auth
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string? Id { get; set; }
-    public string? Email { get; set; } = null!;
+    public string? Email { get; set; }
 
     [BsonRequired]
     [BsonRepresentation(BsonType.Binary)]

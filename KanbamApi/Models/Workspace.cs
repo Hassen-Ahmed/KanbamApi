@@ -10,11 +10,11 @@ namespace KanbamApi.Models
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         [Required]
-        public string Id { get; set; }
+        public string Id { get; set; } = string.Empty;
 
         [BsonRequired]
         [Required]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
     }
 }

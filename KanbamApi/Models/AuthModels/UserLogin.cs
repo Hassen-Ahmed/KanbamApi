@@ -6,8 +6,8 @@ namespace KanbamApi.Models.AuthModels;
 public class UserLogin
 {
     [BsonElement("Email")]
-    public string? Email { get; set; } = "";
+    public string? Email { get; set; } = string.Empty;
 
     [BsonElement("Password")]
-    public string? Password { get; set; } = "";
+    public string? Password { get; set; } = string.Empty;
 }
