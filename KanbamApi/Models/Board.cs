@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
@@ -7,14 +8,17 @@ namespace KanbamApi.Models
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
+        [Required]
         public string Id { get; set; }
 
         [BsonRequired]
         [BsonElement("Name")]
+        [Required]
         public string Name { get; set; }
 
         [BsonRepresentation(BsonType.ObjectId)]
         [BsonElement("WorkspaceId")]
+        [Required]
         public string WorkspaceId { get; set; }
 
         [BsonElement("Description")]

@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
@@ -8,13 +9,16 @@ public class Card
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
+    [Required]
     public string Id { get; set; }
 
     [BsonRepresentation(BsonType.ObjectId)]
+    [Required]
     public string ListId { get; set; }
 
     [BsonRequired]
     [BsonElement("Title")]
+    [Required]
     public string Title { get; set; }
 
     [BsonRequired]

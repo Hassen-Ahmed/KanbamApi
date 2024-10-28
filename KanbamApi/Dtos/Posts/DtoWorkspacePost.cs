@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using MongoDB.Bson.Serialization.Attributes;
@@ -10,6 +11,7 @@ namespace KanbamApi.Dtos.Posts
     {
         [BsonRequired]
         [BsonElement("Name")]
+        [Required]
         public string Name { get; set; }
 
         [BsonElement("Description")]
