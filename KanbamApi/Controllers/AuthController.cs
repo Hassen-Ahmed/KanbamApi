@@ -140,6 +140,12 @@ public class AuthController : ControllerBase
         if (userId is null)
             return StatusCode(401, "Unauthorized User!");
 
-        return StatusCode(201, new { token = _authControllerService.GenerateToken(userId) });
+        return StatusCode(
+            201,
+            new Dictionary<string, string>
+            {
+                { "token", _authControllerService.GenerateToken(userId) }
+            }
+        );
     }
 }
