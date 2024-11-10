@@ -135,17 +135,11 @@ public class AuthController : ControllerBase
             if (passwordHash[i] != res.PasswordHash[i])
                 return StatusCode(401, "Unauthorized Request!");
 
-        var userId = await _usersService.GetUserIdByEmail(userLogin.Email!);
+        var userId = await _usersService.GetUserIdByEmailAsync(userLogin.Email!);
 
-        if (userId.Length == 0)
+        if (userId is null)
             return StatusCode(401, "Unauthorized User!");
 
-        return StatusCode(
-            201,
-            new Dictionary<string, string>
-            {
-                { "token", _authControllerService.GenerateToken(userId) }
-            }
-        );
+        return StatusCode(201, new { token = _authControllerService.GenerateToken(userId) });
     }
 }
