@@ -16,12 +16,11 @@ namespace KanbamApi.Repositories
             _kanbamDbContext = kanbamDbContext;
         }
 
-        // public async Task<IEnumerable<Workspace>> GetById(string workspaceId)
-        // {
-        //     var filter = Builders<Workspace>.Filter.Eq(w => w.Id, workspaceId);
-        //     var res = await _kanbamDbContext.WorkspacesCollection.Find(filter).ToListAsync();
-        //     return res;
-        // }
+        public async Task<bool> IsWorkspaceExist_Using_WorkspaceId(string workspaceId)
+        {
+            var filter = Builders<Workspace>.Filter.Eq(w => w.Id, workspaceId);
+            return await _kanbamDbContext.WorkspacesCollection.Find(filter).AnyAsync();
+        }
 
         public async Task<IEnumerable<WorkspaceWithMemberDetails>> GetAllWorkspace_ByUserId(
             string userId
@@ -52,6 +51,7 @@ namespace KanbamApi.Repositories
                         { "Name", "$workspaceDetails.Name" },
                         { "Description", "$workspaceDetails.Description" },
                         { "Role", "$Role" },
+                        { "BoardAccessLevel", "$BoardAccessLevel" },
                     }
                 )
             };
