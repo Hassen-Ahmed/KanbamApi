@@ -12,6 +12,7 @@ using KanbamApi.Services.Interfaces;
 using KanbamApi.Util;
 using KanbamApi.Util.Generators.SecureData;
 using KanbamApi.Util.Generators.SecureData.Interfaces;
+using KanbamApi.Util.Validators;
 using KanbamApi.Util.Validators.AuthValidators;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -40,6 +41,8 @@ builder.Services.AddScoped<IValidator<UserLogin>, UserLoginValidator>();
 builder.Services.AddScoped<IValidator<UserRegistration>, UserRegistrationValidator>();
 
 builder.Services.AddScoped<IAuthData, AuthData>();
+
+builder.Services.AddTransient<IGeneralValidation, GeneralValidation>();
 
 // Repos
 builder.Services.AddScoped<IAuthRepo, AuthRepo>();
