@@ -14,8 +14,19 @@ namespace KanbamApi.Controllers;
 public class BoardsController : ControllerBase
 {
     private readonly IBoardService _boardsService;
+    private readonly IWorkspaceService _workspaceService;
+    private readonly IWorkspaceMemberService _workspaceMemberService;
 
-    public BoardsController(IBoardService boardsService) => _boardsService = boardsService;
+    public BoardsController(
+        IBoardService boardsService,
+        IWorkspaceService workspaceService,
+        IWorkspaceMemberService workspaceMemberService
+    )
+    {
+        _boardsService = boardsService;
+        _workspaceService = workspaceService;
+        _workspaceMemberService = workspaceMemberService;
+    }
 
     [HttpGet]
     public async Task<IActionResult> GetAllBoards()
@@ -23,7 +34,7 @@ public class BoardsController : ControllerBase
         try
         {
             var boards = await _boardsService.GetAllAsync();
-            return Ok(new Dictionary<string, object> { { "boards", boards } });
+            return Ok(new { boards });
         }
         catch (Exception ex)
         {
@@ -34,19 +45,23 @@ public class BoardsController : ControllerBase
     [HttpGet("{workspaceId}")]
     public async Task<IActionResult> GetAllBoardsByWorkspaceId(string workspaceId)
     {
-        if (!ObjectId.TryParse(workspaceId, out var _))
+        if (
+            !ObjectId.TryParse(workspaceId, out var _)
+            || !await _workspaceService.IsWorkspaceExist_Using_WorkspaceIdAsync(workspaceId)
+        )
         {
             return BadRequest("Invalid workspaceId.");
         }
 
-        var userId = User.FindFirst("userId")?.Value;
         try
         {
+            var userId = User.FindFirst("userId")?.Value;
             var boards = await _boardsService.GetBoards_With_Members_ByWorkspaceId_Async(
                 workspaceId,
                 userId!
             );
-            return Ok(new Dictionary<string, object> { { "boards", boards } });
+
+            return Ok(new { boards });
         }
         catch (Exception ex)
         {
@@ -57,18 +72,15 @@ public class BoardsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateBoard(DtoBoardPost newBoard)
     {
+        if (!await _workspaceService.IsWorkspaceExist_Using_WorkspaceIdAsync(newBoard.WorkspaceId))
+        {
+            return BadRequest("Invalid boardId.");
+        }
+
         var userId = User.FindFirst("userId")?.Value;
         try
         {
-            Board board =
-                new()
-                {
-                    Name = newBoard.Name,
-                    WorkspaceId = newBoard.WorkspaceId,
-                    Description = newBoard.Description
-                };
-
-            await _boardsService.CreateAsync(userId!, board);
+            await _boardsService.CreateAsync(userId!, newBoard);
             return StatusCode(201, newBoard);
         }
         catch (Exception ex)

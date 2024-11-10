@@ -26,7 +26,7 @@ public class UsersController : ControllerBase
             return StatusCode(400, "Bad request");
 
         var users = await _usersService.GetAllAsync();
-        return Ok(new Dictionary<string, object> { { "users", users } });
+        return Ok(new { users });
     }
 
     [HttpGet("{userId}")]
@@ -40,7 +40,7 @@ public class UsersController : ControllerBase
         {
             var res = await _usersService.GetByIdAsync(userId);
 
-            return Ok(new Dictionary<string, object> { { "user", res[0] } });
+            return Ok(new { user = res[0] });
         }
         catch (Exception ex)
         {

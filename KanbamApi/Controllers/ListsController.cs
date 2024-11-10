@@ -13,8 +13,13 @@ namespace KanbamApi.Controllers;
 public class ListsController : ControllerBase
 {
     private readonly IListsService _listsService;
+    private readonly IBoardService _boardService;
 
-    public ListsController(IListsService listsService) => _listsService = listsService;
+    public ListsController(IListsService listsService, IBoardService boardService)
+    {
+        _listsService = listsService;
+        _boardService = boardService;
+    }
 
     [HttpGet]
     public async Task<ActionResult> GetAllList()
@@ -22,7 +27,7 @@ public class ListsController : ControllerBase
         try
         {
             var lists = await _listsService.GetAllAsync();
-            return Ok(new Dictionary<string, object> { { "lists", lists } });
+            return Ok(new { lists });
         }
         catch (Exception ex)
         {
@@ -33,14 +38,17 @@ public class ListsController : ControllerBase
     [HttpGet("{boardId}")]
     public async Task<ActionResult> GetAllListByBoardId(string boardId)
     {
-        if (!ObjectId.TryParse(boardId, out var _))
+        if (
+            !ObjectId.TryParse(boardId, out var _)
+            || !await _boardService.IsBoardIdExistByBoardIdAsync(boardId)
+        )
         {
             return BadRequest("Invalid boardId.");
         }
         try
         {
             var lists = await _listsService.GetAllByBoardIdAsync(boardId);
-            return Ok(new Dictionary<string, object> { { "lists", lists } });
+            return Ok(new { lists });
         }
         catch (Exception ex)
         {
@@ -51,6 +59,11 @@ public class ListsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateList(DtoListPost newListDto)
     {
+        if (!await _boardService.IsBoardIdExistByBoardIdAsync(newListDto.BoardId))
+        {
+            return BadRequest("Invalid boardId.");
+        }
+
         try
         {
             var createdList = await _listsService.CreateAsync(newListDto);

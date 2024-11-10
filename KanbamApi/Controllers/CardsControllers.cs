@@ -15,20 +15,28 @@ namespace KanbamApi.Controllers;
 public class CardsController : ControllerBase
 {
     private readonly ICardsService _cardsService;
+    private readonly IListsService _listsService;
 
-    public CardsController(ICardsService cardsService) => _cardsService = cardsService;
+    public CardsController(ICardsService cardsService, IListsService listsService)
+    {
+        _cardsService = cardsService;
+        _listsService = listsService;
+    }
 
     [HttpGet("{listId}/list")]
     public async Task<ActionResult<List<Card>>> GetByListId(string listId)
     {
-        if (!ObjectId.TryParse(listId, out var _))
+        if (
+            !ObjectId.TryParse(listId, out var _)
+            || !await _listsService.IsListIdExistByListIdAsync(listId)
+        )
         {
             return BadRequest("Invalid listId.");
         }
         try
         {
             var cards = await _cardsService.GetByListIdAsync(listId);
-            return Ok(new Dictionary<string, object> { { "cards", cards } });
+            return Ok(new { cards });
         }
         catch (Exception ex)
         {
@@ -46,7 +54,7 @@ public class CardsController : ControllerBase
         try
         {
             var card = await _cardsService.GetByIdAsync(cardId);
-            return Ok(new Dictionary<string, object> { { "card", card } });
+            return Ok(new { card });
         }
         catch (Exception ex)
         {
@@ -57,6 +65,11 @@ public class CardsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateNewCard(DtoCardPost dtoNewCard)
     {
+        if (!await _listsService.IsListIdExistByListIdAsync(dtoNewCard.ListId!))
+        {
+            return BadRequest("Invalid listId.");
+        }
+
         try
         {
             var createdCard = await _cardsService.CreateAsync(dtoNewCard);

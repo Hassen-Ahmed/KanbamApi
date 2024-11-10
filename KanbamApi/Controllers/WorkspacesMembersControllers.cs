@@ -1,6 +1,7 @@
 using KanbamApi.Dtos.Posts;
 using KanbamApi.Dtos.Put;
 using KanbamApi.Services.Interfaces;
+using KanbamApi.Util.Validators;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
@@ -13,9 +14,16 @@ namespace KanbamApi.Controllers;
 public class WorkspacesMembersController : ControllerBase
 {
     private readonly IWorkspaceMemberService _workspaceMemberService;
+    private readonly IGeneralValidation _generalValidation;
 
-    public WorkspacesMembersController(IWorkspaceMemberService workspaceMemberService) =>
+    public WorkspacesMembersController(
+        IWorkspaceMemberService workspaceMemberService,
+        IGeneralValidation generalValidation
+    )
+    {
         _workspaceMemberService = workspaceMemberService;
+        _generalValidation = generalValidation;
+    }
 
     [HttpGet]
     public async Task<IActionResult> GetAllMembers()
@@ -23,9 +31,24 @@ public class WorkspacesMembersController : ControllerBase
         try
         {
             var workspacesMembers = await _workspaceMemberService.Get();
-            return Ok(
-                new Dictionary<string, object> { { "workspacesMembers", workspacesMembers } }
+            return Ok(new { workspacesMembers });
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+    }
+
+    [HttpGet("{workspaceId}")]
+    public async Task<IActionResult> GetAllMembersByWorkspaceId(string workspaceId)
+    {
+        try
+        {
+            var workspacesMembers = await _workspaceMemberService.GetMembersByWorkspaceIdAsync(
+                workspaceId
             );
+
+            return Ok(new { workspacesMembers });
         }
         catch (Exception)
         {
@@ -38,16 +61,21 @@ public class WorkspacesMembersController : ControllerBase
         [FromBody] DtoWorkspaceMemberPost newWorkspaceMember
     )
     {
-        var userId = User.FindFirst("userId")?.Value;
+        if (!_generalValidation.IsValidEmail(newWorkspaceMember.Email))
+        {
+            return BadRequest("Invalid email address.");
+        }
+
+        var currentUserId = User.FindFirst("userId")?.Value;
 
         try
         {
             var createdWorkspace = await _workspaceMemberService.CreateAsync(
                 newWorkspaceMember,
-                userId!
+                currentUserId
             );
 
-            return StatusCode(201, createdWorkspace);
+            return createdWorkspace ? StatusCode(201, newWorkspaceMember) : NotFound();
         }
         catch (Exception ex)
         {

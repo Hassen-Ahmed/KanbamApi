@@ -2,6 +2,7 @@ using KanbamApi.Dtos.Posts;
 using KanbamApi.Dtos.Update;
 using KanbamApi.Models;
 using KanbamApi.Services.Interfaces;
+using KanbamApi.Util.Validators;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
@@ -14,9 +15,16 @@ namespace KanbamApi.Controllers;
 public class BoardsMembersController : ControllerBase
 {
     private readonly IBoardMemberService _boardMemberService;
+    private readonly IGeneralValidation _generalValidation;
 
-    public BoardsMembersController(IBoardMemberService boardMemberService) =>
+    public BoardsMembersController(
+        IBoardMemberService boardMemberService,
+        IGeneralValidation generalValidation
+    )
+    {
         _boardMemberService = boardMemberService;
+        _generalValidation = generalValidation;
+    }
 
     [HttpGet]
     public async Task<IActionResult> GetAllBoardMembers()
@@ -24,7 +32,7 @@ public class BoardsMembersController : ControllerBase
         try
         {
             var boards = await _boardMemberService.GetAllAsync();
-            return Ok(new Dictionary<string, object> { { "boards", boards } });
+            return Ok(new { boards });
         }
         catch (Exception ex)
         {
@@ -33,21 +41,23 @@ public class BoardsMembersController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateBoard(DtoBoardMemberPost newBoard)
+    public async Task<IActionResult> CreateBoard(DtoBoardMemberPost newBoardMember)
     {
-        var userId = User.FindFirst("userId")?.Value;
+        if (!_generalValidation.IsValidEmail(newBoardMember.Email))
+        {
+            return BadRequest("Invalid email address.");
+        }
+
+        var currentUserId = User.FindFirst("userId")?.Value;
+
         try
         {
-            BoardMember boardMember =
-                new()
-                {
-                    UserId = userId!,
-                    BoardId = newBoard.BoardId,
-                    Role = newBoard.Role
-                };
+            var createdWorkspace = await _boardMemberService.CreateAsync(
+                newBoardMember,
+                currentUserId
+            );
 
-            await _boardMemberService.CreateAsync(boardMember);
-            return StatusCode(201, newBoard);
+            return createdWorkspace ? StatusCode(201, newBoardMember) : NotFound();
         }
         catch (Exception ex)
         {

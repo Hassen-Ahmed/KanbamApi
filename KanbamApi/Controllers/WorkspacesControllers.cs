@@ -26,7 +26,7 @@ public class WorkspacesController : ControllerBase
         try
         {
             var workspaces = await _workspaceService.GetWorkspaces_With_Members_ByUserId(userId!);
-            return Ok(new Dictionary<string, object> { { "workspaces", workspaces } });
+            return Ok(new { workspaces });
         }
         catch (Exception)
         {
