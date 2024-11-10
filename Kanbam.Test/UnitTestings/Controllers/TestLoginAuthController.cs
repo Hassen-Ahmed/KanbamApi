@@ -61,8 +61,9 @@ public class TestLoginAuthController : TestBase
             );
 
         _authRepoMock.Setup(a => a.CreateAsync(It.IsAny<Auth>())).ReturnsAsync(true);
+
         _usersServiceMock
-            .Setup(u => u.GetUserIdByEmail(It.IsAny<string>()))
+            .Setup(u => u.GetUserIdByEmailAsync(It.IsAny<string>()))
             .ReturnsAsync("userIdLength>0");
         _authControllerServiceMock
             .Setup(a => a.GeneratePasswordHash(It.IsAny<string>(), It.IsAny<byte[]>()))
@@ -111,7 +112,7 @@ public class TestLoginAuthController : TestBase
         _authRepoMock.Setup(a => a.CreateAsync(It.IsAny<Auth>())).ReturnsAsync(true);
 
         _usersServiceMock
-            .Setup(u => u.GetUserIdByEmail(It.IsAny<string>()))
+            .Setup(u => u.GetUserIdByEmailAsync(It.IsAny<string>()))
             .ReturnsAsync("userIdLength>0");
 
         _authControllerServiceMock
@@ -145,7 +146,7 @@ public class TestLoginAuthController : TestBase
         _authRepoMock.Setup(a => a.CreateAsync(It.IsAny<Auth>())).ReturnsAsync(true);
 
         _usersServiceMock
-            .Setup(u => u.GetUserIdByEmail(It.IsAny<string>()))
+            .Setup(u => u.GetUserIdByEmailAsync(It.IsAny<string>()))
             .ReturnsAsync("userIdLength>0");
 
         _authControllerServiceMock
@@ -188,7 +189,7 @@ public class TestLoginAuthController : TestBase
         _authRepoMock.Setup(a => a.CreateAsync(It.IsAny<Auth>())).ReturnsAsync(true);
 
         _usersServiceMock
-            .Setup(u => u.GetUserIdByEmail(It.IsAny<string>()))
+            .Setup(u => u.GetUserIdByEmailAsync(It.IsAny<string>()))
             .ReturnsAsync("userIdLength>0");
 
         _authControllerServiceMock
@@ -230,7 +231,9 @@ public class TestLoginAuthController : TestBase
 
         _authRepoMock.Setup(a => a.CreateAsync(It.IsAny<Auth>())).ReturnsAsync(true);
 
-        _usersServiceMock.Setup(u => u.GetUserIdByEmail(It.IsAny<string>())).ReturnsAsync("");
+        _usersServiceMock
+            .Setup(u => u.GetUserIdByEmailAsync(It.IsAny<string>()))
+            .ReturnsAsync((string?)null);
 
         _authControllerServiceMock
             .Setup(a => a.GeneratePasswordHash(It.IsAny<string>(), It.IsAny<byte[]>()))
