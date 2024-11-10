@@ -8,6 +8,7 @@ namespace KanbamApi.Dtos.Update
         public string? Description { get; set; }
         public string? Priority { get; set; }
         public List<string>? Comments { get; set; }
+        public DateTime? StartDate { get; set; }
         public DateTime? DueDate { get; set; }
         public DateTime? DueDateReminder { get; set; }
     }
