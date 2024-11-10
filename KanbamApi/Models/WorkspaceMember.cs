@@ -22,5 +22,9 @@ namespace KanbamApi.Models
         [BsonRequired]
         [Required]
         public string Role { get; set; } = string.Empty;
+
+        [BsonRequired]
+        [Required]
+        public string BoardAccessLevel { get; set; } = string.Empty;
     }
 }
