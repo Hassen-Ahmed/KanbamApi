@@ -21,20 +21,23 @@ namespace KanbamApi.Repositories
             return await _kanbamDbContext.BoardMembersCollection.FindSync(filter).ToListAsync();
         }
 
+        public async Task<bool> IsUserIdExist(string userId)
+        {
+            var filter = Builders<BoardMember>.Filter.Eq(b => b.UserId, userId);
+            return await _kanbamDbContext.BoardMembersCollection.Find(filter).AnyAsync();
+        }
+
         public async Task<BoardMember> Create(BoardMember newBoardMember)
         {
             await _kanbamDbContext.BoardMembersCollection.InsertOneAsync(newBoardMember);
             return newBoardMember;
         }
 
-        // public async Task UpdateAsync(string id, BoardMember updatedBoardMember)
-        // {
-        //     var filter = Builders<BoardMember>.Filter.Eq(l => l.Id, id);
-        //     await _kanbamDbContext.BoardMembersCollection.ReplaceOneAsync(
-        //         filter,
-        //         updatedBoardMember
-        //     );
-        // }
+        public async Task<List<BoardMember>> CreateMany(List<BoardMember> newBoardMemberList)
+        {
+            await _kanbamDbContext.BoardMembersCollection.InsertManyAsync(newBoardMemberList);
+            return newBoardMemberList;
+        }
 
         public async Task<bool> Patch(string boardMemberId, DtoBoardMemberUpdate updateBoardMember)
         {

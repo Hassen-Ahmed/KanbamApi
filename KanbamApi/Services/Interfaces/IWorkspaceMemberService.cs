@@ -1,3 +1,4 @@
+using KanbamApi.Dtos;
 using KanbamApi.Dtos.Posts;
 using KanbamApi.Dtos.Put;
 using KanbamApi.Models;
@@ -7,12 +8,9 @@ namespace KanbamApi.Services.Interfaces
     public interface IWorkspaceMemberService
     {
         Task<List<WorkspaceMember>> Get();
-        Task<DtoWorkspaceMemberPost> CreateAsync(
-            DtoWorkspaceMemberPost newWorspaceMember,
-            string userId
-        );
+        Task<List<DtoWorkspaceWithMemberGet>> GetMembersByWorkspaceIdAsync(string workspaceId);
+        Task<bool> CreateAsync(DtoWorkspaceMemberPost newWorspaceMember, string? currentUserId);
 
-        // Task UpdateAsync(string id, WorkspaceMember updatedWorkspaceMember);
         Task<bool> PatchByIdAsync(
             string workspaceId,
             DtoWorkspaceMemberUpdate updateWorkspaceMember

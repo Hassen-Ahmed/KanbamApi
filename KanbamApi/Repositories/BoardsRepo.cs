@@ -16,16 +16,42 @@ namespace KanbamApi.Repositories
             _kanbamDbContext = kanbamDbContext;
         }
 
-        public async Task<List<BoardWithMemberDetails>> GetAllBoards_ByUserId(
+        public async Task<List<Board>> GetAll()
+        {
+            var filter = Builders<Board>.Filter.Empty;
+            return await _kanbamDbContext.BoardsCollection.FindSync(filter).ToListAsync();
+        }
+
+        public async Task<bool> IsBoardIdExistByBoardId(string boardId)
+        {
+            var filter = Builders<Board>.Filter.Eq(b => b.Id, boardId);
+            return await _kanbamDbContext.BoardsCollection.Find(filter).AnyAsync();
+        }
+
+        public async Task<string?> GetWorkspaceIdByBoardId(string boardId)
+        {
+            if (string.IsNullOrWhiteSpace(boardId))
+                return null;
+
+            var filter = Builders<Board>.Filter.Eq(b => b.Id, boardId);
+            var board = await _kanbamDbContext.BoardsCollection.Find(filter).FirstOrDefaultAsync();
+
+            return board?.WorkspaceId;
+        }
+
+        public async Task<List<BoardWithMemberDetails>> GetAllBoards_WithMembers_ByWorkspaceId(
             string workspaceId,
             string userId
         )
         {
-            var userIdObject = new ObjectId(userId);
+            var workspaceObjectId = new ObjectId(workspaceId);
+            var userObjectId = new ObjectId(userId);
 
-            var pipeline = new[]
-            {
-                new BsonDocument("$match", new BsonDocument("UserId", userIdObject)),
+            var pipeline = new List<BsonDocument>();
+
+            pipeline.Add(new BsonDocument("$match", new BsonDocument("UserId", userObjectId)));
+
+            pipeline.Add(
                 new BsonDocument(
                     "$lookup",
                     new BsonDocument
@@ -35,8 +61,12 @@ namespace KanbamApi.Repositories
                         { "foreignField", "_id" },
                         { "as", "boardsDetails" }
                     }
-                ),
-                new BsonDocument("$unwind", "$boardsDetails"),
+                )
+            );
+
+            pipeline.Add(new BsonDocument("$unwind", "$boardsDetails"));
+
+            pipeline.Add(
                 new BsonDocument(
                     "$project",
                     new BsonDocument
@@ -49,18 +79,56 @@ namespace KanbamApi.Repositories
                         { "Role", "$Role" },
                     }
                 )
-            };
+            );
+
+            pipeline.Add(
+                new BsonDocument("$match", new BsonDocument("WorkspaceId", workspaceObjectId))
+            );
 
             var result = await _kanbamDbContext
                 .BoardMembersCollection.Aggregate<BoardWithMemberDetails>(pipeline)
                 .ToListAsync();
             return result;
+
+            // var pipeline = new[]
+            // {
+            //     new BsonDocument("$match", new BsonDocument("UserId", userObjectId)),
+            //     new BsonDocument(
+            //         "$lookup",
+            //         new BsonDocument
+            //         {
+            //             { "from", "Boards" },
+            //             { "localField", "BoardId" },
+            //             { "foreignField", "_id" },
+            //             { "as", "boardsDetails" }
+            //         }
+            //     ),
+            //     new BsonDocument("$unwind", "$boardsDetails"),
+            //     new BsonDocument(
+            //         "$project",
+            //         new BsonDocument
+            //         {
+            //             { "_id", 0 },
+            //             { "BoardId", "$boardsDetails._id" },
+            //             { "WorkspaceId", "$boardsDetails.WorkspaceId" },
+            //             { "Name", "$boardsDetails.Name" },
+            //             { "Description", "$boardsDetails.Description" },
+            //             { "Role", "$Role" },
+            //         }
+            //     ),
+            //     new BsonDocument("$match", new BsonDocument("WorkspaceId", workspaceObjectId)),
+            // };
+
+            // var result = await _kanbamDbContext
+            //     .BoardMembersCollection.Aggregate<BoardWithMemberDetails>(pipeline)
+            //     .ToListAsync();
+            // return result;
         }
 
-        public async Task<List<Board>> GetAll()
+        public async Task<List<Board>> Get_OnlyBoards_ByWorkspaceId(string workspaceId)
         {
-            var filter = Builders<Board>.Filter.Empty;
-            return await _kanbamDbContext.BoardsCollection.FindSync(filter).ToListAsync();
+            var filter = Builders<Board>.Filter.Eq(b => b.WorkspaceId, workspaceId);
+            return await _kanbamDbContext.BoardsCollection.Find(filter).ToListAsync();
         }
 
         public async Task<Board> Create(Board newBoard)

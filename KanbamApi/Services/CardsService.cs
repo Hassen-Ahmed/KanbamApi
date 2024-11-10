@@ -24,7 +24,7 @@ public class CardsService : ICardsService
     public async Task<List<Card>> GetByListIdAsync(string listId) =>
         await _cardsRepo.GetByListId(listId);
 
-    public async Task<DtoCardPost> CreateAsync(DtoCardPost dtoNewCard)
+    public async Task<Card> CreateAsync(DtoCardPost dtoNewCard)
     {
         var filter = Builders<Card>.Filter.Empty;
         CountOptions opts = new() { Hint = "_id_" };
@@ -41,8 +41,8 @@ public class CardsService : ICardsService
                 IndexNumber = indexNumber + 1,
             };
 
-        await _cardsRepo.Create(newList);
-        return dtoNewCard;
+        var resCard = await _cardsRepo.Create(newList);
+        return resCard;
     }
 
     public async Task<bool> PatchByIdAsync(string id, DtoCardUpdate dtoCardUpdate) =>

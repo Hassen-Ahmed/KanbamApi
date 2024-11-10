@@ -18,6 +18,12 @@ public class ListsRepo : IListsRepo
         return await _kanbamDbContext.ListsCollection.FindSync(filter).ToListAsync();
     }
 
+    public async Task<bool> IsListIdExistByListId(string listId)
+    {
+        var filter = Builders<List>.Filter.Eq(b => b.Id, listId);
+        return await _kanbamDbContext.ListsCollection.Find(filter).AnyAsync();
+    }
+
     public async Task<List<List>> GetAllByBoardId(string boardId)
     {
         var filter = Builders<List>.Filter.Eq(l => l.BoardId, boardId);

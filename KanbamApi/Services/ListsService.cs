@@ -21,10 +21,15 @@ public class ListsService : IListsService
 
     public async Task<List<List>> GetAllAsync() => await _listsRepo.GetAll();
 
+    public async Task<bool> IsListIdExistByListIdAsync(string listId)
+    {
+        return await _listsRepo.IsListIdExistByListId(listId);
+    }
+
     public async Task<List<List>> GetAllByBoardIdAsync(string boardId) =>
         await _listsRepo.GetAllByBoardId(boardId);
 
-    public async Task<DtoListPost> CreateAsync(DtoListPost newListDto)
+    public async Task<List> CreateAsync(DtoListPost newListDto)
     {
         var filter = Builders<List>.Filter.Empty;
         CountOptions opts = new() { Hint = "_id_" };
@@ -40,8 +45,8 @@ public class ListsService : IListsService
                 IndexNumber = indexNumber + 1,
             };
 
-        await _listsRepo.Create(newList);
-        return newListDto;
+        var resList = await _listsRepo.Create(newList);
+        return resList;
     }
 
     public async Task<bool> PatchByIdAsync(string listId, DtoListsUpdate dtoListsUpdate) =>

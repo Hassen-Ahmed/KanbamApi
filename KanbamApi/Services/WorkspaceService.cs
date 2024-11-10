@@ -27,6 +27,11 @@ namespace KanbamApi.Services
         // public async Task<IEnumerable<Workspace>> GetWorkspaceById(string workspaceId) =>
         //     await _workspacesRepo.GetById(workspaceId);
 
+        public async Task<bool> IsWorkspaceExist_Using_WorkspaceIdAsync(string workspaceId)
+        {
+            return await _workspacesRepo.IsWorkspaceExist_Using_WorkspaceId(workspaceId);
+        }
+
         public Task<IEnumerable<WorkspaceWithMemberDetails>> GetWorkspaces_With_Members_ByUserId(
             string userId
         )
@@ -65,7 +70,9 @@ namespace KanbamApi.Services
                         UserId = userId,
                         WorkspaceId = workspaceId,
                         Role = "Admin",
+                        BoardAccessLevel = "All"
                     };
+
                 await _workspacesMemberRepo.Create(newMember);
 
                 await session.CommitTransactionAsync();

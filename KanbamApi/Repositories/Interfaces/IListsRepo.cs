@@ -6,6 +6,7 @@ namespace KanbamApi.Repositories.Interfaces;
 public interface IListsRepo
 {
     Task<List<List>> GetAll();
+    Task<bool> IsListIdExistByListId(string listId);
     Task<List<List>> GetAllByBoardId(string boardId);
     Task<List> Create(List newList);
     Task<bool> Patch(string id, DtoListsUpdate dtoListsUpdate);

@@ -23,12 +23,15 @@ public class UsersRepo : IUsersRepo
         return await _kanbamDbContext.UsersCollection.FindSync(filter).ToListAsync();
     }
 
-    public async Task<string> GetUserIdByEmail(string? email)
+    public async Task<string?> GetUserIdByEmail(string? email)
     {
-        var filter = Builders<User>.Filter.Eq(u => u.Email, email);
-        var res = await _kanbamDbContext.UsersCollection.Find(filter).FirstOrDefaultAsync();
+        if (string.IsNullOrWhiteSpace(email))
+            return null;
 
-        return res is null ? "" : res.Id;
+        var filter = Builders<User>.Filter.Eq(u => u.Email, email);
+        var user = await _kanbamDbContext.UsersCollection.Find(filter).FirstOrDefaultAsync();
+
+        return user?.Id;
     }
 
     public async Task<string> Create(User newUser)

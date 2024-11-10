@@ -5,9 +5,15 @@ namespace KanbamApi.Repositories.Interfaces
 {
     public interface IBoardsRepo
     {
-        Task<List<BoardWithMemberDetails>> GetAllBoards_ByUserId(string workspaceId, string userId);
-
         Task<List<Board>> GetAll();
+        Task<bool> IsBoardIdExistByBoardId(string boardId);
+        Task<string?> GetWorkspaceIdByBoardId(string boardId);
+        Task<List<BoardWithMemberDetails>> GetAllBoards_WithMembers_ByWorkspaceId(
+            string workspaceId,
+            string userId
+        );
+        Task<List<Board>> Get_OnlyBoards_ByWorkspaceId(string workspaceId);
+
         Task<Board> Create(Board newBoard);
         Task<bool> Patch(string boardId, DtoBoardUpdate updateBoard);
 

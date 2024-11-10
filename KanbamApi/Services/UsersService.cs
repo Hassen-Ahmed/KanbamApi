@@ -29,9 +29,9 @@ public class UsersService : IUsersService
         return await _usersRepo.GetById(id);
     }
 
-    public async Task<string> GetUserIdByEmail(string id)
+    public async Task<string?> GetUserIdByEmailAsync(string email)
     {
-        return await _usersRepo.GetUserIdByEmail(id);
+        return await _usersRepo.GetUserIdByEmail(email);
     }
 
     public async Task<string?> CreateAsync(User newUser)
