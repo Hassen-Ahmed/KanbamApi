@@ -18,5 +18,8 @@ namespace KanbamApi.Models
 
         [Required]
         public string Role { get; set; } = string.Empty;
+
+        [Required]
+        public string BoardAccessLevel { get; set; } = string.Empty;
     }
 }
