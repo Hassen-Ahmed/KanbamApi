@@ -103,16 +103,6 @@ namespace KanbamApi.Repositories
             var updateDefinitionBuilder = Builders<WorkspaceMember>.Update;
             var updateDefinition = new List<UpdateDefinition<WorkspaceMember>>();
 
-            if (!string.IsNullOrEmpty(updateWorkspaceMember.WorkspaceId))
-            {
-                updateDefinition.Add(
-                    updateDefinitionBuilder.Set(
-                        w => w.WorkspaceId,
-                        updateWorkspaceMember.WorkspaceId
-                    )
-                );
-            }
-
             if (!string.IsNullOrEmpty(updateWorkspaceMember.Role))
             {
                 updateDefinition.Add(
