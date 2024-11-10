@@ -7,7 +7,11 @@ namespace KanbamApi.Dtos.Posts
     {
         [BsonRequired]
         [Required]
-        public string workspaceId { get; set; } = string.Empty;
+        public string WorkspaceId { get; set; } = string.Empty;
+
+        [BsonRequired]
+        [Required]
+        public string Email { get; set; } = string.Empty;
 
         [BsonRequired]
         [Required]
