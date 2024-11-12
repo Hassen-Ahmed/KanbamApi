@@ -14,19 +14,40 @@ namespace KanbamApi.Controllers;
 public class WorkspacesController : ControllerBase
 {
     private readonly IWorkspaceService _workspaceService;
+    private readonly IUsersService _usersService;
 
-    public WorkspacesController(IWorkspaceService workspaceService) =>
+    public WorkspacesController(IWorkspaceService workspaceService, IUsersService usersService)
+    {
         _workspaceService = workspaceService;
+        _usersService = usersService;
+    }
 
     [HttpGet]
     public async Task<IActionResult> GetAllWorkspacesByUserId()
     {
         var userId = User.FindFirst("userId")?.Value;
 
+        if (userId is null)
+        {
+            return Unauthorized("Wrong userId!");
+        }
+
         try
         {
-            var workspaces = await _workspaceService.GetWorkspaces_With_Members_ByUserId(userId!);
-            return Ok(new { workspaces });
+            var userDetail = await _usersService.GetByIdAsync(userId);
+            var workspaces = await _workspaceService.GetWorkspaces_With_Members_ByUserId(userId);
+
+            return Ok(
+                new
+                {
+                    workspaces,
+                    userDetail = new Dictionary<string, string>
+                    {
+                        { "userName", userDetail[0].UserName! },
+                        { "email", userDetail[0].Email! },
+                    },
+                }
+            );
         }
         catch (Exception)
         {
