@@ -30,6 +30,19 @@ namespace KanbamApi.Repositories
             return await _kanbamDbContext.WorkspaceMembersCollection.Find(filter).ToListAsync();
         }
 
+        public async Task<string?> Get_Role_ByUserId(string userId)
+        {
+            if (string.IsNullOrWhiteSpace(userId))
+                return null;
+
+            var filter = Builders<WorkspaceMember>.Filter.Eq(wm => wm.UserId, userId);
+            var member = await _kanbamDbContext
+                .WorkspaceMembersCollection.Find(filter)
+                .FirstOrDefaultAsync();
+
+            return member?.Role;
+        }
+
         public async Task<bool> IsUserAMember_Using_WorkspaceId_And_UserId(
             string workspaceId,
             string userId
