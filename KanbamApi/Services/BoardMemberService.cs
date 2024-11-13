@@ -1,4 +1,5 @@
 using KanbamApi.Data.Interfaces;
+using KanbamApi.Dtos;
 using KanbamApi.Dtos.Posts;
 using KanbamApi.Dtos.Update;
 using KanbamApi.Models;
@@ -33,6 +34,12 @@ namespace KanbamApi.Services
         public async Task<List<BoardMember>> GetAllAsync()
         {
             return await _boardMemberRepo.GetAll();
+        }
+
+        public async Task<List<DtoBoardWithMemberGet>> GetMembersByBoardIdAsync(string boardId)
+        {
+            var members = await _boardMemberRepo.GetAllByBoardId(boardId);
+            return members;
         }
 
         public async Task<bool> CreateAsync(
