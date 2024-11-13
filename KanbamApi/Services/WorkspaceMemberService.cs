@@ -55,6 +55,14 @@ namespace KanbamApi.Services
                 return false;
             }
 
+            var currentUserRole = await _workspacesMemberRepo.Get_Role_ByUserId(currentUserId!);
+
+            if (currentUserRole is null || currentUserRole is not "Admin")
+            {
+                Console.WriteLine("is not admin");
+                return false;
+            }
+
             // check if the member already exist using workspaceId and userId
             var isUserAMember =
                 await _workspacesMemberRepo.IsUserAMember_Using_WorkspaceId_And_UserId(
