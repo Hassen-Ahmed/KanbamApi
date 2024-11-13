@@ -40,6 +40,25 @@ public class BoardsMembersController : ControllerBase
         }
     }
 
+    [HttpGet("{boardId}")]
+    public async Task<IActionResult> GetAllBoardMembersByBoardId(string boardId)
+    {
+        if (!ObjectId.TryParse(boardId, out var _))
+        {
+            return BadRequest("Invalid boardId.");
+        }
+
+        try
+        {
+            var boardMembers = await _boardMemberService.GetMembersByBoardIdAsync(boardId);
+            return boardMembers.Count > 0 ? Ok(new { boardMembers }) : NotFound();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+        }
+    }
+
     [HttpPost]
     public async Task<IActionResult> CreateBoard(DtoBoardMemberPost newBoardMember)
     {
