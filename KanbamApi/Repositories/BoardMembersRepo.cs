@@ -1,7 +1,9 @@
 using KanbamApi.Data.Interfaces;
+using KanbamApi.Dtos;
 using KanbamApi.Dtos.Update;
 using KanbamApi.Models;
 using KanbamApi.Repositories.Interfaces;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace KanbamApi.Repositories
@@ -19,6 +21,46 @@ namespace KanbamApi.Repositories
         {
             var filter = Builders<BoardMember>.Filter.Empty;
             return await _kanbamDbContext.BoardMembersCollection.FindSync(filter).ToListAsync();
+        }
+
+        public async Task<List<DtoBoardWithMemberGet>> GetAllByBoardId(string boardId)
+        {
+            // var filter = Builders<BoardMember>.Filter.Eq(bm => bm.BoardId, boardId);
+            // return await _kanbamDbContext.BoardMembersCollection.FindSync(filter).ToListAsync();
+            var boardIdObject = new ObjectId(boardId);
+
+            var pipeline = new[]
+            {
+                new BsonDocument("$match", new BsonDocument { { "BoardId", boardIdObject } }),
+                new BsonDocument(
+                    "$lookup",
+                    new BsonDocument
+                    {
+                        { "from", "Users" },
+                        { "localField", "UserId" },
+                        { "foreignField", "_id" },
+                        { "as", "workspaceDetails" }
+                    }
+                ),
+                new BsonDocument("$unwind", "$workspaceDetails"),
+                new BsonDocument(
+                    "$project",
+                    new BsonDocument
+                    {
+                        { "_id", 1 },
+                        { "UserId", "$workspaceDetails._id" },
+                        { "UserName", "$workspaceDetails.UserName" },
+                        { "Email", "$workspaceDetails.Email" },
+                        { "Role", "$Role" },
+                    }
+                ),
+            };
+
+            var result = await _kanbamDbContext
+                .BoardMembersCollection.Aggregate<DtoBoardWithMemberGet>(pipeline)
+                .ToListAsync();
+
+            return result;
         }
 
         public async Task<bool> IsUserIdExist(string userId)
