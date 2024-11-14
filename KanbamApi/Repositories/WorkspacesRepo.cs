@@ -107,37 +107,71 @@ namespace KanbamApi.Repositories
 
         public async Task<bool> Remove_With_Members(string workspaceId)
         {
-            // worksapces
-            var workspaceFileter = Builders<Workspace>.Filter.Eq(w => w.Id, workspaceId);
-            var deletedWorkspaces = await _kanbamDbContext.WorkspacesCollection.DeleteOneAsync(
-                workspaceFileter
-            );
+            using var session = await _kanbamDbContext.MongoClient.StartSessionAsync();
+            session.StartTransaction();
 
-            if (deletedWorkspaces.DeletedCount == 0)
+            try
             {
-                return false;
-            }
-
-            var workspaceMemberFileter = Builders<WorkspaceMember>.Filter.Eq(
-                wm => wm.WorkspaceId,
-                workspaceId
-            );
-
-            var deletedWorkspaceMember =
-                await _kanbamDbContext.WorkspaceMembersCollection.DeleteOneAsync(
-                    workspaceMemberFileter
+                // worksapces
+                var workspaceFileter = Builders<Workspace>.Filter.Eq(w => w.Id, workspaceId);
+                var deletedWorkspaces = await _kanbamDbContext.WorkspacesCollection.DeleteOneAsync(
+                    session,
+                    workspaceFileter
                 );
 
-            if (deletedWorkspaceMember.DeletedCount == 0)
-            {
-                return false;
+                var workspaceMemberFileter = Builders<WorkspaceMember>.Filter.Eq(
+                    wm => wm.WorkspaceId,
+                    workspaceId
+                );
+
+                var deletedWorkspaceMember =
+                    await _kanbamDbContext.WorkspaceMembersCollection.DeleteManyAsync(
+                        session,
+                        workspaceMemberFileter
+                    );
+
+                if (deletedWorkspaces.DeletedCount == 0 || deletedWorkspaceMember.DeletedCount == 0)
+                {
+                    await session.AbortTransactionAsync();
+                    return false;
+                }
+
+                // check boards exist with this workspaceId
+                var boardFilter = Builders<Board>.Filter.Eq(b => b.WorkspaceId, workspaceId);
+                var boardsExist =
+                    await _kanbamDbContext.BoardsCollection.CountDocumentsAsync(
+                        session,
+                        boardFilter
+                    ) > 0;
+
+                if (boardsExist)
+                {
+                    // boards and boardsMember
+                    var boardsAndMembersDeletionResult =
+                        await _boardsRepo.RemoveMany_With_Members_ByWorkspaceId(workspaceId);
+
+                    if (!boardsAndMembersDeletionResult)
+                    {
+                        await session.AbortTransactionAsync();
+                        return false;
+                    }
+                }
+
+                await session.CommitTransactionAsync();
+                return true;
             }
-
-            // boards and boardsMember
-            var boardsAndMembersDeletionResult =
-                await _boardsRepo.RemoveMany_With_Members_ByWorkspaceId(workspaceId);
-
-            return boardsAndMembersDeletionResult;
+            catch (MongoException ex)
+            {
+                await session.AbortTransactionAsync();
+                Console.WriteLine($"MongoException occurred: {ex.Message}");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                await session.AbortTransactionAsync();
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                throw;
+            }
         }
     }
 }
