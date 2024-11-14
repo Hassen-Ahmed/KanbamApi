@@ -16,6 +16,5 @@ namespace KanbamApi.Repositories.Interfaces
 
         Task<bool> Patch(string id, DtoWorkspaceMemberUpdate updateWorkspaceMember);
         Task<bool> RemoveById(string workspaceId);
-        Task<bool> RemoveByWorkspaceId(string workspaceId);
     }
 }

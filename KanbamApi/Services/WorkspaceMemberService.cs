@@ -115,8 +115,5 @@ namespace KanbamApi.Services
 
         public async Task<bool> RemoveByIdAsync(string id) =>
             await _workspacesMemberRepo.RemoveById(id);
-
-        public async Task<bool> RemoveByWorkspaceIdAsync(string workspaceId) =>
-            await _workspacesMemberRepo.RemoveByWorkspaceId(workspaceId);
     }
 }

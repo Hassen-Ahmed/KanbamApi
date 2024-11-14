@@ -144,12 +144,5 @@ namespace KanbamApi.Repositories
             var res = await _kanbamDbContext.WorkspaceMembersCollection.DeleteOneAsync(filter);
             return res.DeletedCount > 0;
         }
-
-        public async Task<bool> RemoveByWorkspaceId(string workspaceId)
-        {
-            var filter = Builders<WorkspaceMember>.Filter.Eq(wm => wm.WorkspaceId, workspaceId);
-            var res = await _kanbamDbContext.WorkspaceMembersCollection.DeleteOneAsync(filter);
-            return res.DeletedCount > 0;
-        }
     }
 }
