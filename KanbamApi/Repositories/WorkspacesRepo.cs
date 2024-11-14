@@ -10,10 +10,12 @@ namespace KanbamApi.Repositories
     public class WorkspacesRepo : IWorkspacesRepo
     {
         private readonly IKanbamDbContext _kanbamDbContext;
+        private readonly IBoardsRepo _boardsRepo;
 
-        public WorkspacesRepo(IKanbamDbContext kanbamDbContext)
+        public WorkspacesRepo(IKanbamDbContext kanbamDbContext, IBoardsRepo boardsRepo)
         {
             _kanbamDbContext = kanbamDbContext;
+            _boardsRepo = boardsRepo;
         }
 
         public async Task<bool> IsWorkspaceExist_Using_WorkspaceId(string workspaceId)
@@ -103,11 +105,39 @@ namespace KanbamApi.Repositories
             return result.ModifiedCount > 0;
         }
 
-        public async Task<bool> Remove(string id)
+        public async Task<bool> Remove_With_Members(string workspaceId)
         {
-            var filter = Builders<Workspace>.Filter.Eq(w => w.Id, id);
-            var res = await _kanbamDbContext.WorkspacesCollection.DeleteOneAsync(filter);
-            return res.DeletedCount > 0;
+            // worksapces
+            var workspaceFileter = Builders<Workspace>.Filter.Eq(w => w.Id, workspaceId);
+            var deletedWorkspaces = await _kanbamDbContext.WorkspacesCollection.DeleteOneAsync(
+                workspaceFileter
+            );
+
+            if (deletedWorkspaces.DeletedCount == 0)
+            {
+                return false;
+            }
+
+            var workspaceMemberFileter = Builders<WorkspaceMember>.Filter.Eq(
+                wm => wm.WorkspaceId,
+                workspaceId
+            );
+
+            var deletedWorkspaceMember =
+                await _kanbamDbContext.WorkspaceMembersCollection.DeleteOneAsync(
+                    workspaceMemberFileter
+                );
+
+            if (deletedWorkspaceMember.DeletedCount == 0)
+            {
+                return false;
+            }
+
+            // boards and boardsMember
+            var boardsAndMembersDeletionResult =
+                await _boardsRepo.RemoveMany_With_Members_ByWorkspaceId(workspaceId);
+
+            return boardsAndMembersDeletionResult;
         }
     }
 }

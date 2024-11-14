@@ -10,6 +10,6 @@ namespace KanbamApi.Repositories.Interfaces
         Task<Workspace> Create(Workspace newWorkspace);
 
         Task<bool> Patch(string workspaceId, DtoWorkspaceUpdate updateWorkspace);
-        Task<bool> Remove(string id);
+        Task<bool> Remove_With_Members(string workspaceId);
     }
 }
