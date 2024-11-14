@@ -17,7 +17,7 @@ namespace KanbamApi.Repositories.Interfaces
         Task<Board> Create(Board newBoard);
         Task<bool> Patch(string boardId, DtoBoardUpdate updateBoard);
 
-        // Task Update(string id, Board updatedBoard);
         Task<bool> RemoveByBoardId(string boardId);
+        Task<bool> RemoveMany_With_Members_ByWorkspaceId(string workspaceId);
     }
 }

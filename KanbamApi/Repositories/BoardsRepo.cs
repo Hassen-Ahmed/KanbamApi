@@ -28,6 +28,12 @@ namespace KanbamApi.Repositories
             return await _kanbamDbContext.BoardsCollection.Find(filter).AnyAsync();
         }
 
+        public async Task<bool> IsBoardsExist_ByWorkspaceId(string workspaceId)
+        {
+            var filter = Builders<Board>.Filter.Eq(b => b.WorkspaceId, workspaceId);
+            return await _kanbamDbContext.BoardsCollection.Find(filter).AnyAsync();
+        }
+
         public async Task<string?> GetWorkspaceIdByBoardId(string boardId)
         {
             if (string.IsNullOrWhiteSpace(boardId))
@@ -178,6 +184,32 @@ namespace KanbamApi.Repositories
             var filter = Builders<Board>.Filter.Eq(b => b.Id, boardId);
             var res = await _kanbamDbContext.BoardsCollection.DeleteOneAsync(filter);
             return res.DeletedCount > 0;
+        }
+
+        public async Task<bool> RemoveMany_With_Members_ByWorkspaceId(string workspaceId)
+        {
+            var boardFilter = Builders<Board>.Filter.Eq(b => b.WorkspaceId, workspaceId);
+
+            var boardIds = await _kanbamDbContext
+                .BoardsCollection.Find(boardFilter)
+                .Project(b => b.Id)
+                .ToListAsync();
+
+            if (boardIds.Count == 0)
+            {
+                return false;
+            }
+
+            var boardMembersFilter = Builders<BoardMember>.Filter.In(bm => bm.BoardId, boardIds);
+            var deletedBoardMembers = await _kanbamDbContext.BoardMembersCollection.DeleteManyAsync(
+                boardMembersFilter
+            );
+
+            var deletedBoards = await _kanbamDbContext.BoardsCollection.DeleteManyAsync(
+                boardFilter
+            );
+
+            return deletedBoardMembers.DeletedCount > 0 || deletedBoards.DeletedCount > 0;
         }
     }
 }

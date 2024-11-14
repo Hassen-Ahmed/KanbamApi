@@ -123,12 +123,12 @@ namespace KanbamApi.Services
             session.StartTransaction();
             try
             {
-                var resultOne = await _boardRepo.RemoveByBoardId(boardId);
-                var resultTwo = await _boardMemberRepo.RemoveByBoardId(boardId);
+                var isBoardDeleted = await _boardRepo.RemoveByBoardId(boardId);
+                var isBoardMemberDeleted = await _boardMemberRepo.RemoveByBoardId(boardId);
                 // await _listsService.RemoveByBoardId(boardId);
 
                 await session.CommitTransactionAsync();
-                return resultOne && resultTwo;
+                return isBoardDeleted && isBoardMemberDeleted;
             }
             catch (MongoException)
             {
@@ -140,6 +140,14 @@ namespace KanbamApi.Services
                 await session.AbortTransactionAsync();
                 throw;
             }
+        }
+
+        public async Task<bool> RemoveManyByWorkspaceIdAsync(string workspaceId)
+        {
+            var areBoardsDeleted = await _boardRepo.RemoveMany_With_Members_ByWorkspaceId(
+                workspaceId
+            );
+            return areBoardsDeleted;
         }
     }
 }
