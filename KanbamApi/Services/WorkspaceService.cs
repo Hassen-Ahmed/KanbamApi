@@ -94,16 +94,20 @@ namespace KanbamApi.Services
 
         public async Task<bool> PatchByIdAsync(
             string workspaceId,
-            DtoWorkspaceUpdate updateWorkspace
+            DtoWorkspaceUpdate updateWorkspace,
+            string userId
         )
         {
-            return await _workspacesRepo.Patch(workspaceId, updateWorkspace);
+            // check if the user is Admin before updating
+            var isUserAdmin = await _workspacesMemberRepo.Is_User_Admin_ByUserId(userId);
+            return isUserAdmin && await _workspacesRepo.Patch(workspaceId, updateWorkspace);
         }
 
-        public async Task<bool> Remove_With_MembersAsync(string workspaceId)
+        public async Task<bool> Remove_With_MembersAsync(string workspaceId, string userId)
         {
-            var deltetionResult = await _workspacesRepo.Remove_With_Members(workspaceId);
-            return deltetionResult;
+            // check if the user is Admin before deleting
+            var isUserAdmin = await _workspacesMemberRepo.Is_User_Admin_ByUserId(userId);
+            return isUserAdmin && await _workspacesRepo.Remove_With_Members(workspaceId);
         }
     }
 }
