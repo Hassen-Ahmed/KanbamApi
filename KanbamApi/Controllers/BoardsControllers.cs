@@ -100,7 +100,9 @@ public class BoardsController : ControllerBase
             return BadRequest("Invalid boardId.");
         }
 
-        var updated = await _boardsService.PatchByIdAsync(boardId, updateBoard);
+        var userId = User.FindFirst("userId")?.Value;
+
+        var updated = await _boardsService.PatchByIdAsync(boardId, updateBoard, userId!);
 
         if (!updated)
             return NotFound("Board not found or nothing to update.");
@@ -115,9 +117,12 @@ public class BoardsController : ControllerBase
         {
             return BadRequest("Invalid boardId.");
         }
+
+        var userId = User.FindFirst("userId")?.Value;
+
         try
         {
-            var res = await _boardsService.RemoveByIdAsync(boardId);
+            var res = await _boardsService.RemoveByIdAsync(boardId, userId!);
             return res ? NoContent() : BadRequest();
         }
         catch (Exception ex)
