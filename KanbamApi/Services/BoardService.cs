@@ -112,18 +112,41 @@ namespace KanbamApi.Services
             }
         }
 
-        public async Task<bool> PatchByIdAsync(string boardId, DtoBoardUpdate updateBoard)
+        public async Task<bool> PatchByIdAsync(
+            string boardId,
+            DtoBoardUpdate updateBoard,
+            string userId
+        )
         {
-            return await _boardRepo.Patch(boardId, updateBoard);
+            // check if the user is Admin updated
+            var isUserAdmin = await _boardMemberRepo.Is_User_Admin_ByUserId(userId);
+            return isUserAdmin && await _boardRepo.Patch(boardId, updateBoard);
         }
 
-        public async Task<bool> RemoveByIdAsync(string boardId)
+        public async Task<bool> RemoveByIdAsync(string boardId, string userId)
         {
             using var session = await _kanbamDbContext.MongoClient.StartSessionAsync();
             session.StartTransaction();
+
             try
             {
+                // check if the user is Admin before deleting
+                var isUserAdmin = await _boardMemberRepo.Is_User_Admin_ByUserId(userId);
+
+                if (!isUserAdmin)
+                {
+                    await session.AbortTransactionAsync();
+                    return false;
+                }
+
                 var isBoardDeleted = await _boardRepo.RemoveByBoardId(boardId);
+
+                if (!isBoardDeleted)
+                {
+                    await session.AbortTransactionAsync();
+                    return false;
+                }
+
                 var isBoardMemberDeleted = await _boardMemberRepo.RemoveByBoardId(boardId);
                 // await _listsService.RemoveByBoardId(boardId);
 
