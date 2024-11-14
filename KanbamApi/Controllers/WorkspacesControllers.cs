@@ -104,7 +104,10 @@ public class WorkspacesController : ControllerBase
         {
             return BadRequest("Invalid workspaceId.");
         }
-        var updated = await _workspaceService.PatchByIdAsync(workspaceId, updateWorkspace);
+
+        var userId = User.FindFirst("userId")?.Value!;
+
+        var updated = await _workspaceService.PatchByIdAsync(workspaceId, updateWorkspace, userId);
 
         if (!updated)
             return NotFound("Workspace not found or nothing to update.");
@@ -121,7 +124,8 @@ public class WorkspacesController : ControllerBase
         }
         try
         {
-            var res = await _workspaceService.Remove_With_MembersAsync(workspaceId);
+            var userId = User.FindFirst("userId")?.Value!;
+            var res = await _workspaceService.Remove_With_MembersAsync(workspaceId, userId);
 
             return res ? NoContent() : BadRequest();
         }
