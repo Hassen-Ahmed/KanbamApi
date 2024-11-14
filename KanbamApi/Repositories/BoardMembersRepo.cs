@@ -69,6 +69,23 @@ namespace KanbamApi.Repositories
             return await _kanbamDbContext.BoardMembersCollection.Find(filter).AnyAsync();
         }
 
+        public async Task<bool> Is_User_Admin_ByUserId(string userId)
+        {
+            if (string.IsNullOrEmpty(userId))
+            {
+                return false;
+            }
+
+            var filter = Builders<BoardMember>.Filter.And(
+                Builders<BoardMember>.Filter.Eq(bm => bm.UserId, userId),
+                Builders<BoardMember>.Filter.Eq(bm => bm.Role, "Admin")
+            );
+
+            var isAdmin = await _kanbamDbContext.BoardMembersCollection.Find(filter).AnyAsync();
+
+            return isAdmin;
+        }
+
         public async Task<BoardMember> Create(BoardMember newBoardMember)
         {
             await _kanbamDbContext.BoardMembersCollection.InsertOneAsync(newBoardMember);
@@ -132,7 +149,7 @@ namespace KanbamApi.Repositories
         public async Task<bool> RemoveByBoardId(string boardId)
         {
             var filter = Builders<BoardMember>.Filter.Eq(bm => bm.BoardId, boardId);
-            var res = await _kanbamDbContext.BoardMembersCollection.DeleteOneAsync(filter);
+            var res = await _kanbamDbContext.BoardMembersCollection.DeleteManyAsync(filter);
 
             return res.DeletedCount > 0;
         }
