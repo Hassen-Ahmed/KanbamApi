@@ -121,7 +121,8 @@ public class WorkspacesController : ControllerBase
         }
         try
         {
-            var res = await _workspaceService.RemoveAsync(workspaceId);
+            var res = await _workspaceService.Remove_With_MembersAsync(workspaceId);
+
             return res ? NoContent() : BadRequest();
         }
         catch (Exception ex)
