@@ -188,28 +188,52 @@ namespace KanbamApi.Repositories
 
         public async Task<bool> RemoveMany_With_Members_ByWorkspaceId(string workspaceId)
         {
-            var boardFilter = Builders<Board>.Filter.Eq(b => b.WorkspaceId, workspaceId);
+            using var session = await _kanbamDbContext.MongoClient.StartSessionAsync();
+            session.StartTransaction();
 
-            var boardIds = await _kanbamDbContext
-                .BoardsCollection.Find(boardFilter)
-                .Project(b => b.Id)
-                .ToListAsync();
-
-            if (boardIds.Count == 0)
+            try
             {
-                return false;
+                var boardFilter = Builders<Board>.Filter.Eq(b => b.WorkspaceId, workspaceId);
+
+                var boardIds = await _kanbamDbContext
+                    .BoardsCollection.Find(boardFilter)
+                    .Project(b => b.Id)
+                    .ToListAsync();
+
+                if (boardIds.Count == 0)
+                {
+                    await session.AbortTransactionAsync();
+                    return false;
+                }
+
+                var boardMembersFilter = Builders<BoardMember>.Filter.In(
+                    bm => bm.BoardId,
+                    boardIds
+                );
+                var deletedBoardMembers =
+                    await _kanbamDbContext.BoardMembersCollection.DeleteManyAsync(
+                        boardMembersFilter
+                    );
+
+                var deletedBoards = await _kanbamDbContext.BoardsCollection.DeleteManyAsync(
+                    boardFilter
+                );
+
+                await session.CommitTransactionAsync();
+                return deletedBoardMembers.DeletedCount > 0 || deletedBoards.DeletedCount > 0;
             }
-
-            var boardMembersFilter = Builders<BoardMember>.Filter.In(bm => bm.BoardId, boardIds);
-            var deletedBoardMembers = await _kanbamDbContext.BoardMembersCollection.DeleteManyAsync(
-                boardMembersFilter
-            );
-
-            var deletedBoards = await _kanbamDbContext.BoardsCollection.DeleteManyAsync(
-                boardFilter
-            );
-
-            return deletedBoardMembers.DeletedCount > 0 || deletedBoards.DeletedCount > 0;
+            catch (MongoException ex)
+            {
+                await session.AbortTransactionAsync();
+                Console.WriteLine($"MongoException occurred: {ex.Message}");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                await session.AbortTransactionAsync();
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                throw;
+            }
         }
     }
 }
