@@ -12,8 +12,7 @@ namespace KanbamApi.Services.Interfaces
         );
         Task CreateAsync(string userId, Workspace newWorspace);
 
-        // Task UpdateAsync(string id, Workspace updatedWorkspace);
         Task<bool> PatchByIdAsync(string workspaceId, DtoWorkspaceUpdate updateWorkspaceTo);
-        Task<bool> RemoveAsync(string id);
+        Task<bool> Remove_With_MembersAsync(string id);
     };
 }

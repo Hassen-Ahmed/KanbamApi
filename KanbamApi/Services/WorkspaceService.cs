@@ -11,16 +11,19 @@ namespace KanbamApi.Services
     {
         private readonly IWorkspacesRepo _workspacesRepo;
         private readonly IWorkspaceMembersRepo _workspacesMemberRepo;
+        private readonly IBoardService _boardMemberService;
         private readonly IKanbamDbContext _kanbamDbContext;
 
         public WorkspaceService(
             IWorkspacesRepo workspacesRepo,
             IWorkspaceMembersRepo workspacesMemberRepo,
-            IKanbamDbContext kanbamDbContext
+            IKanbamDbContext kanbamDbContext,
+            IBoardService boardService
         )
         {
             _workspacesRepo = workspacesRepo;
             _workspacesMemberRepo = workspacesMemberRepo;
+            _boardMemberService = boardService;
             _kanbamDbContext = kanbamDbContext;
         }
 
@@ -89,9 +92,6 @@ namespace KanbamApi.Services
             }
         }
 
-        // public async Task UpdateAsync(string id, Workspace updatedWorkspace) =>
-        //     await _workspacesRepo.Update(id, updatedWorkspace);
-
         public async Task<bool> PatchByIdAsync(
             string workspaceId,
             DtoWorkspaceUpdate updateWorkspace
@@ -100,28 +100,10 @@ namespace KanbamApi.Services
             return await _workspacesRepo.Patch(workspaceId, updateWorkspace);
         }
 
-        public async Task<bool> RemoveAsync(string workspaceId)
+        public async Task<bool> Remove_With_MembersAsync(string workspaceId)
         {
-            using var session = await _kanbamDbContext.MongoClient.StartSessionAsync();
-            session.StartTransaction();
-            try
-            {
-                var resultOne = await _workspacesRepo.Remove(workspaceId);
-                var resultTwo = await _workspacesMemberRepo.RemoveByWorkspaceId(workspaceId);
-                // await _boardService.RemoveByWorkspaceId(workspaceId);
-                await session.CommitTransactionAsync();
-                return resultOne && resultTwo;
-            }
-            catch (MongoException)
-            {
-                await session.AbortTransactionAsync();
-                throw;
-            }
-            catch (Exception)
-            {
-                await session.AbortTransactionAsync();
-                throw;
-            }
+            var deltetionResult = await _workspacesRepo.Remove_With_Members(workspaceId);
+            return deltetionResult;
         }
     }
 }
