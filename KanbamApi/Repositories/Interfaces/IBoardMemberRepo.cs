@@ -9,6 +9,7 @@ namespace KanbamApi.Repositories.Interfaces
         Task<List<BoardMember>> GetAll();
         Task<List<DtoBoardWithMemberGet>> GetAllByBoardId(string boardId);
         Task<bool> IsUserIdExist(string userId);
+        Task<bool> Is_User_Admin_ByUserId(string userId);
         Task<BoardMember> Create(BoardMember newBoardMember);
         Task<List<BoardMember>> CreateMany(List<BoardMember> newBoardMemberList);
         Task<bool> Patch(string boardMemberId, DtoBoardMemberUpdate updateBoardMember);
