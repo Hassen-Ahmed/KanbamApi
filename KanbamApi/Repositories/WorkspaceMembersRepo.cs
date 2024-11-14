@@ -43,19 +43,6 @@ namespace KanbamApi.Repositories
             return member?.Role;
         }
 
-        public async Task<bool> IsUserAMember_Using_WorkspaceId_And_UserId(
-            string workspaceId,
-            string userId
-        )
-        {
-            var filter = Builders<WorkspaceMember>.Filter.And(
-                Builders<WorkspaceMember>.Filter.Eq(w => w.WorkspaceId, workspaceId),
-                Builders<WorkspaceMember>.Filter.Eq(w => w.UserId, userId)
-            );
-
-            return await _kanbamDbContext.WorkspaceMembersCollection.Find(filter).AnyAsync();
-        }
-
         public async Task<List<DtoWorkspaceWithMemberGet>> GetMembersByWorkspaceId(
             string workspaceId
         )
@@ -103,6 +90,36 @@ namespace KanbamApi.Repositories
                 .ToListAsync();
 
             return result;
+        }
+
+        public async Task<bool> IsUserAMember_Using_WorkspaceId_And_UserId(
+            string workspaceId,
+            string userId
+        )
+        {
+            var filter = Builders<WorkspaceMember>.Filter.And(
+                Builders<WorkspaceMember>.Filter.Eq(w => w.WorkspaceId, workspaceId),
+                Builders<WorkspaceMember>.Filter.Eq(w => w.UserId, userId)
+            );
+
+            return await _kanbamDbContext.WorkspaceMembersCollection.Find(filter).AnyAsync();
+        }
+
+        public async Task<bool> Is_User_Admin_ByUserId(string userId)
+        {
+            if (string.IsNullOrEmpty(userId))
+            {
+                return false;
+            }
+
+            var filter = Builders<WorkspaceMember>.Filter.And(
+                Builders<WorkspaceMember>.Filter.Eq(bm => bm.UserId, userId),
+                Builders<WorkspaceMember>.Filter.Eq(bm => bm.Role, "Admin")
+            );
+
+            var isAdmin = await _kanbamDbContext.WorkspaceMembersCollection.Find(filter).AnyAsync();
+
+            return isAdmin;
         }
 
         public async Task<WorkspaceMember> Create(WorkspaceMember newWorkspaceMember)
