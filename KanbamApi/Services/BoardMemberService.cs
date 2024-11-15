@@ -96,8 +96,9 @@ namespace KanbamApi.Services
             return isUserAdmin && await _boardMemberRepo.Patch(workspaceId, updateBoardMember);
         }
 
-        public async Task<bool> RemoveById(string id)
+        public async Task<bool> RemoveById(string id, string currentUserId)
         {
+            var isUserAdmin = await _boardMemberRepo.Is_User_Admin_ByUserId(currentUserId);
             return await _boardMemberRepo.RemoveById(id);
         }
     }

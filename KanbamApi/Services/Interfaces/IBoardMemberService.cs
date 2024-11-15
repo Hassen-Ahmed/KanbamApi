@@ -15,6 +15,6 @@ namespace KanbamApi.Services.Interfaces
             DtoBoardMemberUpdate updateBoardMember,
             string currentUserId
         );
-        Task<bool> RemoveById(string id);
+        Task<bool> RemoveById(string id, string currentUserId);
     }
 }
