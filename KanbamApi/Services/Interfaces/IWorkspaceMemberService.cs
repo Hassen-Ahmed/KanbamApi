@@ -16,6 +16,6 @@ namespace KanbamApi.Services.Interfaces
             DtoWorkspaceMemberUpdate updateWorkspaceMember,
             string userId
         );
-        Task<bool> RemoveByIdAsync(string id);
+        Task<bool> RemoveByIdAsync(string id, string currentUserId);
     }
 }

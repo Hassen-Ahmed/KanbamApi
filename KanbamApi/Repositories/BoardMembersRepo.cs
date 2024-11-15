@@ -146,7 +146,7 @@ namespace KanbamApi.Repositories
             return res.DeletedCount > 0;
         }
 
-        public async Task<bool> RemoveByBoardId(string boardId)
+        public async Task<bool> RemoveManyByBoardId(string boardId)
         {
             var filter = Builders<BoardMember>.Filter.Eq(bm => bm.BoardId, boardId);
             var res = await _kanbamDbContext.BoardMembersCollection.DeleteManyAsync(filter);

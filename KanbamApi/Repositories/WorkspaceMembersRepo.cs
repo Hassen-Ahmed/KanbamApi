@@ -157,9 +157,51 @@ namespace KanbamApi.Repositories
 
         public async Task<bool> RemoveById(string id)
         {
-            var filter = Builders<WorkspaceMember>.Filter.Eq(wm => wm.Id, id);
-            var res = await _kanbamDbContext.WorkspaceMembersCollection.DeleteOneAsync(filter);
-            return res.DeletedCount > 0;
+            using var session = await _kanbamDbContext.MongoClient.StartSessionAsync();
+            session.StartTransaction();
+
+            try
+            {
+                var filterWorkspace = Builders<WorkspaceMember>.Filter.Eq(wm => wm.Id, id);
+
+                var member = await _kanbamDbContext
+                    .WorkspaceMembersCollection.Find(filterWorkspace)
+                    .FirstOrDefaultAsync();
+
+                var res = await _kanbamDbContext.WorkspaceMembersCollection.DeleteOneAsync(
+                    filterWorkspace
+                );
+
+                var userId = member.UserId;
+
+                if (userId is null)
+                {
+                    await session.AbortTransactionAsync();
+                    return false;
+                }
+
+                var boardMembersFilter = Builders<BoardMember>.Filter.Eq(bm => bm.UserId, userId);
+
+                var deletedBoardMembers =
+                    await _kanbamDbContext.BoardMembersCollection.DeleteManyAsync(
+                        boardMembersFilter
+                    );
+
+                await session.CommitTransactionAsync();
+                return deletedBoardMembers.DeletedCount > 0;
+            }
+            catch (MongoException ex)
+            {
+                await session.AbortTransactionAsync();
+                Console.WriteLine($"MongoException occurred: {ex.Message}");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                await session.AbortTransactionAsync();
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                throw;
+            }
         }
     }
 }
