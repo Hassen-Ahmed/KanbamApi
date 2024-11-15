@@ -94,8 +94,13 @@ public class BoardsMembersController : ControllerBase
         {
             return BadRequest("Invalid boardMemberId.");
         }
+        var currentUserId = User.FindFirst("userId")?.Value;
 
-        var updated = await _boardMemberService.PatchByIdAsync(boardMemberId, updateBoardMember);
+        var updated = await _boardMemberService.PatchByIdAsync(
+            boardMemberId,
+            updateBoardMember,
+            currentUserId!
+        );
 
         if (!updated)
             return NotFound("BoardMember not found or nothing to update.");
