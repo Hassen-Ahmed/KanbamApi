@@ -168,17 +168,23 @@ namespace KanbamApi.Repositories
                     .WorkspaceMembersCollection.Find(filterWorkspace)
                     .FirstOrDefaultAsync();
 
-                var res = await _kanbamDbContext.WorkspaceMembersCollection.DeleteOneAsync(
-                    filterWorkspace
-                );
-
-                var userId = member.UserId;
-
-                if (userId is null)
+                if (member == null)
                 {
                     await session.AbortTransactionAsync();
                     return false;
                 }
+
+                var deleteResult = await _kanbamDbContext.WorkspaceMembersCollection.DeleteOneAsync(
+                    filterWorkspace
+                );
+
+                if (deleteResult.DeletedCount == 0)
+                {
+                    await session.AbortTransactionAsync();
+                    return false;
+                }
+
+                var userId = member.UserId;
 
                 var boardMembersFilter = Builders<BoardMember>.Filter.Eq(bm => bm.UserId, userId);
 
@@ -188,7 +194,7 @@ namespace KanbamApi.Repositories
                     );
 
                 await session.CommitTransactionAsync();
-                return deletedBoardMembers.DeletedCount > 0;
+                return true;
             }
             catch (MongoException ex)
             {
