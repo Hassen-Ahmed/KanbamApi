@@ -93,9 +93,13 @@ public class WorkspacesMembersController : ControllerBase
         {
             return BadRequest("Invalid workspaceMemberId.");
         }
+
+        var currentUserId = User.FindFirst("userId")?.Value;
+
         var updated = await _workspaceMemberService.PatchByIdAsync(
             workspaceMemberId,
-            updateWorkspaceMember
+            updateWorkspaceMember,
+            currentUserId!
         );
 
         if (!updated)
