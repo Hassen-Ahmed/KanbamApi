@@ -117,7 +117,11 @@ public class WorkspacesMembersController : ControllerBase
         }
         try
         {
-            var res = await _workspaceMemberService.RemoveByIdAsync(workspaceMemberId);
+            var currentUserId = User.FindFirst("userId")?.Value;
+            var res = await _workspaceMemberService.RemoveByIdAsync(
+                workspaceMemberId,
+                currentUserId!
+            );
             return res ? NoContent() : BadRequest();
         }
         catch (Exception ex)
