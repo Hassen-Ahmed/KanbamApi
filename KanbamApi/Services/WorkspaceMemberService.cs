@@ -107,10 +107,13 @@ namespace KanbamApi.Services
 
         public async Task<bool> PatchByIdAsync(
             string id,
-            DtoWorkspaceMemberUpdate updateWorkspaceMember
+            DtoWorkspaceMemberUpdate updateWorkspaceMember,
+            string userId
         )
         {
-            return await _workspacesMemberRepo.Patch(id, updateWorkspaceMember);
+            // check if the user is Admin before updating
+            var isUserAdmin = await _workspacesMemberRepo.Is_User_Admin_ByUserId(userId);
+            return isUserAdmin && await _workspacesMemberRepo.Patch(id, updateWorkspaceMember);
         }
 
         public async Task<bool> RemoveByIdAsync(string id) =>

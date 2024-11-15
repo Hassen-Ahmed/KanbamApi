@@ -13,7 +13,8 @@ namespace KanbamApi.Services.Interfaces
 
         Task<bool> PatchByIdAsync(
             string workspaceId,
-            DtoWorkspaceMemberUpdate updateWorkspaceMember
+            DtoWorkspaceMemberUpdate updateWorkspaceMember,
+            string userId
         );
         Task<bool> RemoveByIdAsync(string id);
     }
