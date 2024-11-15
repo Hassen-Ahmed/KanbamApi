@@ -147,7 +147,7 @@ namespace KanbamApi.Services
                     return false;
                 }
 
-                var isBoardMemberDeleted = await _boardMemberRepo.RemoveByBoardId(boardId);
+                var isBoardMemberDeleted = await _boardMemberRepo.RemoveManyByBoardId(boardId);
                 // await _listsService.RemoveByBoardId(boardId);
 
                 await session.CommitTransactionAsync();
