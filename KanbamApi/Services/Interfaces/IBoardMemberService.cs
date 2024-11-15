@@ -10,7 +10,11 @@ namespace KanbamApi.Services.Interfaces
         Task<List<BoardMember>> GetAllAsync();
         Task<List<DtoBoardWithMemberGet>> GetMembersByBoardIdAsync(string boardId);
         Task<bool> CreateAsync(DtoBoardMemberPost newBoardMember, string? currentUserId);
-        Task<bool> PatchByIdAsync(string workspaceId, DtoBoardMemberUpdate updateBoardMember);
+        Task<bool> PatchByIdAsync(
+            string workspaceId,
+            DtoBoardMemberUpdate updateBoardMember,
+            string currentUserId
+        );
         Task<bool> RemoveById(string id);
     }
 }
