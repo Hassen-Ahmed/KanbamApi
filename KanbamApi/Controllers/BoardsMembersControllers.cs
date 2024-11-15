@@ -94,6 +94,7 @@ public class BoardsMembersController : ControllerBase
         {
             return BadRequest("Invalid boardMemberId.");
         }
+
         var currentUserId = User.FindFirst("userId")?.Value;
 
         var updated = await _boardMemberService.PatchByIdAsync(
@@ -117,7 +118,9 @@ public class BoardsMembersController : ControllerBase
         }
         try
         {
-            var res = await _boardMemberService.RemoveById(boardMemberId);
+            var currentUserId = User.FindFirst("userId")?.Value;
+
+            var res = await _boardMemberService.RemoveById(boardMemberId, currentUserId!);
             return res ? NoContent() : BadRequest();
         }
         catch (Exception ex)
