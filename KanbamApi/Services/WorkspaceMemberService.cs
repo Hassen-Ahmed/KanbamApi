@@ -116,7 +116,11 @@ namespace KanbamApi.Services
             return isUserAdmin && await _workspacesMemberRepo.Patch(id, updateWorkspaceMember);
         }
 
-        public async Task<bool> RemoveByIdAsync(string id) =>
-            await _workspacesMemberRepo.RemoveById(id);
+        public async Task<bool> RemoveByIdAsync(string id, string currentUserId)
+        {
+            // check if the user is Admin before updating
+            var isUserAdmin = await _workspacesMemberRepo.Is_User_Admin_ByUserId(currentUserId);
+            return isUserAdmin && await _workspacesMemberRepo.RemoveById(id);
+        }
     }
 }
