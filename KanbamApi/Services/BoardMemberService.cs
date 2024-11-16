@@ -99,7 +99,7 @@ namespace KanbamApi.Services
         public async Task<bool> RemoveById(string id, string currentUserId)
         {
             var isUserAdmin = await _boardMemberRepo.Is_User_Admin_ByUserId(currentUserId);
-            return await _boardMemberRepo.RemoveById(id);
+            return isUserAdmin && await _boardMemberRepo.RemoveById(id);
         }
     }
 }
