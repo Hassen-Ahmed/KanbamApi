@@ -46,11 +46,9 @@ namespace KanbamApi.Services
             string? currentUserId
         )
         {
-            var userIdOfNewMember = await _usersService.GetUserIdByEmailAsync(
-                newWorspaceMember.Email
-            );
+            var userDetail = await _usersService.GetUserByEmailAsync(newWorspaceMember.Email);
 
-            if (userIdOfNewMember is null || userIdOfNewMember.Equals(currentUserId))
+            if (userDetail is null || userDetail.Id.Equals(currentUserId))
             {
                 return false;
             }
@@ -67,7 +65,7 @@ namespace KanbamApi.Services
             var isUserAMember =
                 await _workspacesMemberRepo.IsUserAMember_Using_WorkspaceId_And_UserId(
                     newWorspaceMember.WorkspaceId,
-                    userIdOfNewMember
+                    userDetail.Id
                 );
 
             if (isUserAMember)
@@ -76,7 +74,7 @@ namespace KanbamApi.Services
             WorkspaceMember newMember =
                 new()
                 {
-                    UserId = userIdOfNewMember,
+                    UserId = userDetail.Id,
                     WorkspaceId = newWorspaceMember.WorkspaceId,
                     Role = newWorspaceMember.Role,
                     BoardAccessLevel = "All"
@@ -92,7 +90,7 @@ namespace KanbamApi.Services
                 .Select(board => new BoardMember
                 {
                     BoardId = board.Id,
-                    UserId = userIdOfNewMember,
+                    UserId = userDetail.Id,
                     Role = newWorspaceMember.Role
                 })
                 .ToList();
