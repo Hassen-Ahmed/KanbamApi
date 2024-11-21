@@ -4,19 +4,15 @@ using KanbamApi.Data;
 using KanbamApi.Data.Interfaces;
 using KanbamApi.Data.Seed;
 using KanbamApi.Models;
-using KanbamApi.Models.AuthModels;
 using KanbamApi.Repositories;
 using KanbamApi.Repositories.Interfaces;
 using KanbamApi.Services;
 using KanbamApi.Services.Interfaces;
-using KanbamApi.Util;
 using KanbamApi.Util.Generators.SecureData;
 using KanbamApi.Util.Generators.SecureData.Interfaces;
 using KanbamApi.Util.Validators;
-using KanbamApi.Util.Validators.AuthValidators;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,16 +33,14 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddSingleton<IKanbamDbContext, KanbamDbContext>();
 
-builder.Services.AddScoped<IValidator<UserLogin>, UserLoginValidator>();
-builder.Services.AddScoped<IValidator<UserRegistration>, UserRegistrationValidator>();
-
-builder.Services.AddScoped<IAuthData, AuthData>();
-
+builder.Services.AddScoped<IValidator<RefreshToken>, RefreshTokenValidator>();
 builder.Services.AddTransient<IGeneralValidation, GeneralValidation>();
+builder.Services.AddScoped<IAuthData, AuthData>();
 
 // Repos
 builder.Services.AddScoped<IAuthRepo, AuthRepo>();
 builder.Services.AddScoped<IUsersRepo, UsersRepo>();
+builder.Services.AddScoped<IRefreshTokenRepo, RefreshTokenRepo>();
 builder.Services.AddScoped<IListsRepo, ListsRepo>();
 builder.Services.AddScoped<ICardsRepo, CardsRepo>();
 builder.Services.AddScoped<IBoardsRepo, BoardsRepo>();
@@ -56,6 +50,9 @@ builder.Services.AddScoped<IWorkspaceMembersRepo, WorkspaceMembersRepo>();
 
 // Services
 builder.Services.AddScoped<IUsersService, UsersService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 builder.Services.AddScoped<ICardsService, CardsService>();
 builder.Services.AddScoped<IListsService, ListsService>();
 builder.Services.AddScoped<IBoardService, BoardService>();
