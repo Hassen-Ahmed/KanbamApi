@@ -41,6 +41,25 @@ public class RefreshTokenService : IRefreshTokenService
         DateTime expirationDate
     )
     {
+        // preliminary validation
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            _logger.LogWarning("UserId is invalid.");
+            return Result<bool>.Failure(new Error(400, "UserId is required."));
+        }
+
+        if (refreshToken == default(Guid))
+        {
+            _logger.LogWarning("RefreshToken is invalid.");
+            return Result<bool>.Failure(new Error(400, "Token must be a valid GUID."));
+        }
+
+        if (expirationDate <= DateTime.UtcNow)
+        {
+            _logger.LogWarning("ExpirationDate is invalid.");
+            return Result<bool>.Failure(new Error(400, "ExpirationDate must be in the future."));
+        }
+
         var refreshTokenNew = new RefreshToken()
         {
             UserId = userId,
@@ -48,15 +67,20 @@ public class RefreshTokenService : IRefreshTokenService
             TokenExpiryTime = expirationDate,
         };
 
-        var result = await _refreshTokenValidator.ValidateAsync(refreshTokenNew);
+        var validationResult = await _refreshTokenValidator.ValidateAsync(refreshTokenNew);
 
-        if (!result.IsValid)
+        if (!validationResult.IsValid)
         {
-            var ErrorMessage = result.Errors.Select(e => e.ErrorMessage).ToList()[0];
+            var errorMessages = string.Join(
+                "; ",
+                validationResult.Errors.Select(e => e.ErrorMessage)
+            );
+            _logger.LogWarning("Validation failed: {Errors}", errorMessages);
+            _logger.LogWarning($"UserId failed: {userId}", errorMessages);
+            _logger.LogWarning($"Token failed: {refreshToken}", errorMessages);
+            _logger.LogWarning($"TokenExpiryTime failed: {expirationDate}", errorMessages);
 
-            _logger.LogWarning($"Validation failed: {result.Errors}", ErrorMessage);
-
-            var err = new Error(400, $"Validation failed: {ErrorMessage}");
+            var err = new Error(400, $"Validation failed: {errorMessages}");
             return Result<bool>.Failure(err);
         }
 
