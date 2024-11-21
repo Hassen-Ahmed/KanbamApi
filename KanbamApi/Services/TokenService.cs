@@ -20,18 +20,19 @@ public class TokenService : ITokenService
     {
         SymmetricSecurityKey tokenKey = new(Encoding.UTF8.GetBytes($"{SecretKey}"));
 
-        SigningCredentials credentials = new(tokenKey, SecurityAlgorithms.HmacSha512Signature);
-        var expirationDateOfAccessToken = _configuration.GetValue<int>(
-            "KanbamSettings:Expiration:AccessTokenMinute"
-        );
+        SigningCredentials credentials = new(tokenKey, SecurityAlgorithms.HmacSha256Signature);
+
+    
 
         SecurityTokenDescriptor descriptor =
             new()
             {
                 Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddMinutes(15),
+                NotBefore = DateTime.UtcNow.Subtract(TimeSpan.FromSeconds(1)),
+                IssuedAt = DateTime.UtcNow,
                 SigningCredentials = credentials,
-                Expires = DateTime.UtcNow.AddMinutes(expirationDateOfAccessToken),
-
+                  
                 // Issuer =  DotNetEnv.Env.GetString("VALID_ISSUER"),
                 // Audience = DotNetEnv.Env.GetString("VALID_AUDIENCE"),
             };
