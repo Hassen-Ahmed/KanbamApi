@@ -16,12 +16,6 @@ public class RefreshTokenValidator : AbstractValidator<RefreshToken>
             .Must(token => token != default(Guid))
             .WithMessage("Token must be a valid GUID.");
 
-        RuleFor(x => x.TokenExpiryTime)
-            .NotEmpty()
-            .WithMessage("TokenExpiryTime is required.")
-            .Must(BeAValidDate)
-            .WithMessage("TokenExpiryTime must be a valid date and not in the past.");
+        RuleFor(x => x.TokenExpiryTime).NotEmpty().WithMessage("TokenExpiryTime is required.");
     }
-
-    private bool BeAValidDate(DateTime date) => date > DateTime.UtcNow;
 }
