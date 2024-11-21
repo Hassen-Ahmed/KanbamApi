@@ -35,11 +35,7 @@ public class RefreshTokenService : IRefreshTokenService
         return await _refreshTokenRepo.GetRefreshTokensByToken(token);
     }
 
-    public async Task<Result<bool>> SaveRefreshTokenAsync(
-        string userId,
-        Guid refreshToken,
-        DateTime expirationDate
-    )
+    public async Task<Result<bool>> SaveRefreshTokenAsync(string userId, Guid refreshToken)
     {
         // preliminary validation
         if (string.IsNullOrWhiteSpace(userId))
@@ -54,17 +50,11 @@ public class RefreshTokenService : IRefreshTokenService
             return Result<bool>.Failure(new Error(400, "Token must be a valid GUID."));
         }
 
-        if (expirationDate <= DateTime.UtcNow)
-        {
-            _logger.LogWarning("ExpirationDate is invalid.");
-            return Result<bool>.Failure(new Error(400, "ExpirationDate must be in the future."));
-        }
-
         var refreshTokenNew = new RefreshToken()
         {
             UserId = userId,
             Token = refreshToken,
-            TokenExpiryTime = expirationDate,
+            TokenExpiryTime = DateTime.UtcNow.AddDays(7),
         };
 
         var validationResult = await _refreshTokenValidator.ValidateAsync(refreshTokenNew);
@@ -78,7 +68,6 @@ public class RefreshTokenService : IRefreshTokenService
             _logger.LogWarning("Validation failed: {Errors}", errorMessages);
             _logger.LogWarning($"UserId failed: {userId}", errorMessages);
             _logger.LogWarning($"Token failed: {refreshToken}", errorMessages);
-            _logger.LogWarning($"TokenExpiryTime failed: {expirationDate}", errorMessages);
 
             var err = new Error(400, $"Validation failed: {errorMessages}");
             return Result<bool>.Failure(err);
