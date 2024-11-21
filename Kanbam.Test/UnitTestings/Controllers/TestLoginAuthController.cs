@@ -102,9 +102,7 @@ public class TestLoginAuthController : TestBase
             .Returns("this is my token.");
 
         _refreshTokenServiceMock
-            .Setup(a =>
-                a.SaveRefreshTokenAsync(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<DateTime>())
-            )
+            .Setup(a => a.SaveRefreshTokenAsync(It.IsAny<string>(), It.IsAny<Guid>()))
             .ReturnsAsync(Result<bool>.Success(true));
 
         // Act

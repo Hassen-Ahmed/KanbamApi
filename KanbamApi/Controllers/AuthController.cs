@@ -127,20 +127,15 @@ public class AuthController : ControllerBase
         var refreshToken = _tokenService.GenerateRefreshToken();
 
         // Save refresh token
-        var expirationDateOfRefreshToken = _configuration.GetValue<int>(
-            "KanbamSettings:Expiration:RefreshTokenDate"
-        );
-
         var isRefreshTokenSaved = await _refreshTokenService.SaveRefreshTokenAsync(
             user.Id,
-            refreshToken,
-            DateTime.UtcNow.AddDays(expirationDateOfRefreshToken)
+            refreshToken
         );
 
         if (isRefreshTokenSaved is null || !isRefreshTokenSaved.IsSuccess)
             return StatusCode(500, "An unknow error occured");
 
-        SetRefreshTokenCookie(refreshToken, DateTime.UtcNow.AddDays(expirationDateOfRefreshToken));
+        SetRefreshTokenCookie(refreshToken, DateTime.UtcNow.AddDays(7));
 
         return Ok(new { accessToken });
     }
