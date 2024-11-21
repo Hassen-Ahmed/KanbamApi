@@ -33,14 +33,16 @@ public class AuthData : IAuthData
 
         SymmetricSecurityKey tokenKey = new(Encoding.UTF8.GetBytes($"{tokenKeyString}"));
 
-        SigningCredentials credentials = new(tokenKey, SecurityAlgorithms.HmacSha512Signature);
+        SigningCredentials credentials = new(tokenKey, SecurityAlgorithms.HmacSha256Signature);
 
         SecurityTokenDescriptor descriptor =
             new()
             {
                 Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddMinutes(15),
+                NotBefore = DateTime.UtcNow,
+                IssuedAt = DateTime.UtcNow,
                 SigningCredentials = credentials,
-                Expires = DateTime.Now.AddDays(7),
 
                 // uncomment after host this API
                 // Issuer =  DotNetEnv.Env.GetString("VALID_ISSUER"),
