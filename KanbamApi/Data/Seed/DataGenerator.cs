@@ -60,22 +60,55 @@ public class DataGenerator
 
     public List<Workspace> GenerateWorkspaces(int count)
     {
-        var fakerCards = new Faker<Workspace>()
+        var fakerWorkspaces = new Faker<Workspace>()
             .RuleFor(c => c.Id, f => $"{ObjectId.GenerateNewId()}")
             .RuleFor(c => c.Name, f => f.Lorem.Word())
             .RuleFor(c => c.Description, f => f.Lorem.Paragraph());
 
-        return fakerCards.Generate(count);
+        return fakerWorkspaces.Generate(count);
+    }
+
+    public List<Board> GenerateBoards(int count)
+    {
+        var fakerBoards = new Faker<Board>()
+            .RuleFor(c => c.Id, f => $"{ObjectId.GenerateNewId()}")
+            .RuleFor(c => c.Name, f => f.Lorem.Word())
+            .RuleFor(c => c.WorkspaceId, f => f.Lorem.Paragraph())
+            .RuleFor(c => c.Description, f => f.Lorem.Paragraph());
+
+        return fakerBoards.Generate(count);
+    }
+
+    public List<BoardMember> GenerateBoardMembers(int count)
+    {
+        var fakerBoardMembers = new Faker<BoardMember>()
+            .RuleFor(c => c.Id, f => $"{ObjectId.GenerateNewId()}")
+            .RuleFor(c => c.UserId, f => $"{ObjectId.GenerateNewId()}")
+            .RuleFor(c => c.BoardId, f => $"{ObjectId.GenerateNewId()}")
+            .RuleFor(c => c.Role, f => f.Lorem.Paragraph());
+
+        return fakerBoardMembers.Generate(count);
     }
 
     public List<WorkspaceMember> GenerateWorkspaceMembers(int count)
     {
-        var fakerCards = new Faker<WorkspaceMember>()
+        var fakerWorkspaceMembers = new Faker<WorkspaceMember>()
             .RuleFor(c => c.Id, f => $"{ObjectId.GenerateNewId()}")
             .RuleFor(c => c.UserId, f => $"{ObjectId.GenerateNewId()}")
             .RuleFor(c => c.WorkspaceId, f => $"{ObjectId.GenerateNewId()}")
             .RuleFor(c => c.Role, f => f.Lorem.Word());
 
-        return fakerCards.Generate(count);
+        return fakerWorkspaceMembers.Generate(count);
+    }
+
+    public List<RefreshToken> GenerateRefreshToken(int count)
+    {
+        var fakerRefreshTokena = new Faker<RefreshToken>()
+            .RuleFor(c => c.Id, f => $"{ObjectId.GenerateNewId()}")
+            .RuleFor(c => c.UserId, f => $"{ObjectId.GenerateNewId()}")
+            .RuleFor(c => c.Token, f => Guid.NewGuid())
+            .RuleFor(c => c.TokenExpiryTime, f => f.DateTimeReference);
+
+        return fakerRefreshTokena.Generate(count);
     }
 }

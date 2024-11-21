@@ -17,7 +17,7 @@ public class AuthData : IAuthData
         byte[] passwordHash = KeyDerivation.Pbkdf2(
             password: $"{password}",
             salt: Encoding.UTF8.GetBytes(passwordSaltPlusPasswordKey),
-            prf: KeyDerivationPrf.HMACSHA1,
+            prf: KeyDerivationPrf.HMACSHA256,
             iterationCount: 100000,
             numBytesRequested: 256 / 8
         );

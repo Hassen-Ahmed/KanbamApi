@@ -17,11 +17,12 @@ public class AuthRepo : IAuthRepo
     public async Task<List<Auth>> GetAsync() =>
         await _kanbamDbContext.AuthCollection.Find(_ => true).ToListAsync();
 
-    public async Task<Auth> CheckEmailExist(string? email)
+    public async Task<Auth> IsEmailExists(string? email)
     {
-        Auth? result = await _kanbamDbContext
+        Auth result = await _kanbamDbContext
             .AuthCollection.Find(x => x.Email == email)
             .FirstOrDefaultAsync();
+
         return result;
     }
 
@@ -29,7 +30,7 @@ public class AuthRepo : IAuthRepo
     {
         await _kanbamDbContext.AuthCollection.InsertOneAsync(newAuth);
 
-        var res = await CheckEmailExist(newAuth.Email);
+        var res = await IsEmailExists(newAuth.Email);
 
         return res is null ? false : true;
     }

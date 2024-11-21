@@ -8,6 +8,7 @@ public interface IKanbamDbContext
     IMongoCollection<Card> CardsCollection { get; }
     IMongoCollection<List> ListsCollection { get; }
     IMongoCollection<User> UsersCollection { get; }
+    IMongoCollection<RefreshToken> RefreshTokensCollection { get; }
     IMongoCollection<Auth> AuthCollection { get; }
     IMongoCollection<Board> BoardsCollection { get; }
     IMongoCollection<BoardMember> BoardMembersCollection { get; }
