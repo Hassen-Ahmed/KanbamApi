@@ -1,6 +1,5 @@
 using System.Security.Cryptography;
-using FluentValidation;
-using FluentValidation.Results;
+using KanbamApi.Core;
 using KanbamApi.Models;
 using KanbamApi.Models.AuthModels;
 using KanbamApi.Repositories.Interfaces;
@@ -11,47 +10,46 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace KanbamApi.Controllers;
 
-[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly IValidator<UserLogin> _validatorLogin;
-    private readonly IValidator<UserRegistration> _validatorRegistration;
     private readonly IUsersService _usersService;
-    private readonly IAuthRepo _authRepo;
+    private readonly IAuthService _authService;
     private readonly IAuthData _authControllerService;
+    private readonly ITokenService _tokenService;
+    private readonly IRefreshTokenService _refreshTokenService;
+    private readonly IConfiguration _configuration;
 
     public AuthController(
-        IValidator<UserRegistration> validatorRegistration,
-        IAuthRepo authRepo,
         IUsersService usersService,
+        IAuthService authService,
         IAuthData authControllerService,
-        IValidator<UserLogin> validatorLogin
+        ITokenService tokenService,
+        IRefreshTokenService refreshTokenService,
+        IConfiguration configuration
     )
     {
-        _validatorRegistration = validatorRegistration;
-        _authRepo = authRepo;
         _usersService = usersService;
+        _authService = authService;
         _authControllerService = authControllerService;
-        _validatorLogin = validatorLogin;
+        _tokenService = tokenService;
+        _refreshTokenService = refreshTokenService;
+        _configuration = configuration;
     }
 
-    [AllowAnonymous]
-    [HttpPost("Registarion")]
-    public async Task<IActionResult> Register(UserRegistration userRegistration)
+    [HttpPost(ApiRoutesAuth.Register)]
+    public async Task<IActionResult> Register([FromBody] UserRegistration userRegistration)
     {
-        // validation
-        ValidationResult result = await _validatorRegistration.ValidateAsync(userRegistration);
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
 
-        if (!result.IsValid)
-            return BadRequest(result);
-        //
+        var authDetail = await _authService.IsEmailExists(userRegistration.Email);
 
-        var res = await _authRepo.CheckEmailExist(userRegistration.Email);
-
-        if (res is not null)
-            return BadRequest("Email already exist!");
+        if (authDetail is not null)
+            return BadRequest(new { error = "Email already exists!" });
 
         byte[] passwordSalt = new byte[128 / 8];
         using (var rng = RandomNumberGenerator.Create())
@@ -80,71 +78,154 @@ public class AuthController : ControllerBase
                     $"{userRegistration.Email?.Substring(0, userRegistration.Email.IndexOf('@'))}"
             };
 
-        var isAuthCreated = await _authRepo.CreateAsync(authEntity);
+        var isAuthCreated = await _authService.CreateAsync(authEntity);
         var isUserCreated = await _usersService.CreateAsync(newUser);
 
-        var succefulRegistration = new Dictionary<string, object>
+        if (isUserCreated is null || !isAuthCreated)
         {
-            { "message", "Registration successful!" },
-            {
-                "user",
-                new Dictionary<string, string>
-                {
-                    {
-                        "username",
-                        $"{userRegistration.Email?.Substring(0, userRegistration.Email.IndexOf('@'))}"
-                    },
-                    { "email", authEntity.Email! }
-                }
-            }
-        };
+            return StatusCode(500, "Something wrong with Creating new User!");
+        }
 
-        if (isUserCreated is not null && isAuthCreated)
-            return CreatedAtAction(
-                nameof(Register),
-                new { id = authEntity.Email },
-                succefulRegistration
-            );
-
-        return StatusCode(500, "Something wrong with Creating new User!");
+        return Ok("The registration was successfull!");
     }
 
-    [AllowAnonymous]
-    [HttpPost("Login")]
-    public async Task<IActionResult> Login(UserLogin userLogin)
+    [HttpPost(ApiRoutesAuth.Login)]
+    public async Task<IActionResult> Login([FromBody] UserLogin userLogin)
     {
         // validation
-        ValidationResult result = await _validatorLogin.ValidateAsync(userLogin);
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
 
-        if (!result.IsValid)
-            return BadRequest(result);
+        // check if exists againest database
+        var authEntity = await _authService.IsEmailExists(userLogin.Email);
 
-        // check if exist
-        var res = await _authRepo.CheckEmailExist(userLogin.Email);
+        if (authEntity is null)
+            return Unauthorized("Invalid email.");
 
-        if (res is null)
-            return StatusCode(401, "Wrong Email address.");
-
-        // check if password is correct by create hash and salt.
-        byte[] passwordHash = _authControllerService.GeneratePasswordHash(
+        // Check if password is correct by creating hash and salt.
+        byte[] passwordHash = _authService.GeneratePasswordHash(
             $"{userLogin.Password}",
-            res.PasswordSalt
+            authEntity.PasswordSalt
         );
 
-        for (int i = 0; i < passwordHash.Length; i++)
-            if (passwordHash[i] != res.PasswordHash[i])
-                return StatusCode(401, "Unauthorized Request!");
+        // Validate passwordHash
+        if (!_authService.ValidatePasswordHash(passwordHash, authEntity.PasswordHash))
+            return Unauthorized("Unauthorized Request!");
 
-        var userId = await _usersService.GetUserIdByEmailAsync(userLogin.Email!);
+        // Retrieve user details from database
+        var user = await _usersService.GetUserByEmailAsync(userLogin.Email!);
 
-        if (userId is null)
-            return StatusCode(401, "Unauthorized User!");
+        if (user is null)
+            return Unauthorized("User not found.");
 
-        return StatusCode(
-            201,
-            new Dictionary<string, string>
+        // Generate tokens
+        var claims = _tokenService.GenerateClaims(user.UserName!, user.Id);
+
+        var accessToken = _tokenService.GenerateAccessToken(claims);
+        var refreshToken = _tokenService.GenerateRefreshToken();
+
+        // Save refresh token
+        var expirationDateOfRefreshToken = _configuration.GetValue<int>(
+            "KanbamSettings:Expiration:RefreshTokenDate"
+        );
+
+        var isRefreshTokenSaved = await _refreshTokenService.SaveRefreshTokenAsync(
+            user.Id,
+            refreshToken,
+            DateTime.UtcNow.AddDays(expirationDateOfRefreshToken)
+        );
+
+        if (isRefreshTokenSaved is null || !isRefreshTokenSaved.IsSuccess)
+            return StatusCode(500, "An unknow error occured");
+
+        SetRefreshTokenCookie(refreshToken, DateTime.UtcNow.AddDays(expirationDateOfRefreshToken));
+
+        return Ok(new { accessToken });
+    }
+
+    [HttpPost(ApiRoutesAuth.RefreshToken)]
+    public async Task<IActionResult> RefreshToken([FromBody] AccessTokenExpired accessToken)
+    {
+        if (!Request.Cookies.TryGetValue($"{TokenType.RefreshToken}", out var refreshToken))
+            return Unauthorized("No refresh token found");
+
+        // use detail like userId and username from expired accessToken
+        if (accessToken.expiredAccessToken is null)
+            return BadRequest(new { error = "Wrong token" });
+
+        var principal = _tokenService.DecodeExpiredToken(accessToken.expiredAccessToken);
+
+        if (!Guid.TryParse(refreshToken, out var tokenId))
+            return Unauthorized("Wrong refreshToken");
+
+        // get refreshToken from Databases
+        var storedToken = await _refreshTokenService.GetRefreshTokensByTokenAsync(tokenId);
+
+        if (principal is null || storedToken.Value.UserId != principal.FindFirst("userId")?.Value)
+            return Unauthorized("Wrong accessToken");
+
+        if (storedToken.IsFailure || storedToken.Value.TokenExpiryTime < DateTime.UtcNow)
+            return Unauthorized("Invalid or expired refresh token");
+
+        // get username by userId from database
+        var username = await _usersService.GetUsernameByIdAsync(storedToken.Value.UserId);
+        if (username == null)
+            return Unauthorized("Invalid username");
+
+        // Generate token
+        var claims = _tokenService.GenerateClaims(username, storedToken.Value.UserId);
+
+        var newAccessToken = _tokenService.GenerateAccessToken(claims);
+        var newRefreshToken = _tokenService.GenerateRefreshToken();
+
+        // save refreshToken to Databases
+        var isSaved = await _refreshTokenService.Update_RefreshToken_ById_Async(
+            storedToken.Value.Id,
+            newRefreshToken
+        );
+
+        if (!isSaved.Value)
+            return Unauthorized("Unauthorize access.");
+
+        // update refreshToken
+        Response.Cookies.Delete($"{TokenType.RefreshToken}");
+        SetRefreshTokenCookie(newRefreshToken, storedToken.Value.TokenExpiryTime);
+
+        return Ok(new { accessToken = newAccessToken });
+    }
+
+    [HttpPost(ApiRoutesAuth.Revoke)]
+    public async Task<IActionResult> RevokeRefreshToken()
+    {
+        // check if the user is authentic by expired refreshToken or accessToken
+
+        if (
+            Request.Cookies.TryGetValue($"{TokenType.RefreshToken}", out var refreshToken)
+            && Guid.TryParse(refreshToken, out var tokenId)
+        )
+        {
+            await _refreshTokenService.DeleteRefreshTokenAsync(tokenId);
+
+            Response.Cookies.Delete($"{TokenType.RefreshToken}");
+
+            return NoContent();
+        }
+        return BadRequest(new { error = "Wrong refreshToken" });
+    }
+
+    private void SetRefreshTokenCookie(Guid refreshToken, DateTime? expirationDate)
+    {
+        Response.Cookies.Append(
+            $"{TokenType.RefreshToken}",
+            refreshToken.ToString(),
+            new CookieOptions
             {
-                { "token", _authControllerService.GenerateToken(userId) }
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = expirationDate
             }
         );
     }
