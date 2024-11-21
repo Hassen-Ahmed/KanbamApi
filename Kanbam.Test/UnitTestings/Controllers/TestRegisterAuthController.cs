@@ -54,7 +54,7 @@ public class TestRegisterAuthController : TestBase
         UserRegistration validUser = UserRegFixture.ValidUser();
 
         _authServiceMock
-            .Setup(a => a.IsEmailExists(It.IsAny<string>()))
+            .Setup(a => a.IsEmailExists("falsetest@gmail.com"))
             .ReturnsAsync(
                 new Auth()
                 {
@@ -72,13 +72,14 @@ public class TestRegisterAuthController : TestBase
 
         _usersServiceMock
             .Setup(u => u.CreateAsync(It.IsAny<User>()))
-            .ReturnsAsync("test@gmail.com");
+            .ReturnsAsync("test9@gmail.com");
 
         // Act
         var result = (ObjectResult)await _authController.Register(validUser);
 
         // Asssert
         result.StatusCode.Should().Be(200);
+        result.Value.Should().Be("The registration was successfull!");
     }
 
     [Fact]
@@ -114,7 +115,7 @@ public class TestRegisterAuthController : TestBase
         // Assign
         UserRegistration validUser = UserRegFixture.ValidUser();
 
-        _authServiceMock.Setup(a => a.IsEmailExists(It.IsAny<string>())).ReturnsAsync((Auth)null!);
+        _authServiceMock.Setup(a => a.IsEmailExists(It.IsAny<string>())).ReturnsAsync(new Auth());
         _authServiceMock.Setup(a => a.CreateAsync(It.IsAny<Auth>())).ReturnsAsync(true);
 
         _usersServiceMock
@@ -140,16 +141,7 @@ public class TestRegisterAuthController : TestBase
         // Assign
         UserRegistration validUser = UserRegFixture.ValidUser();
 
-        _authServiceMock
-            .Setup(a => a.IsEmailExists(It.IsAny<string>()))
-            .ReturnsAsync(
-                new Auth()
-                {
-                    Email = "test@gmail.com",
-                    PasswordHash = new byte[128 / 8],
-                    PasswordSalt = new byte[128 / 8]
-                }
-            );
+        _authServiceMock.Setup(a => a.IsEmailExists("test@gmail.com")).ReturnsAsync((Auth)null!);
 
         _usersServiceMock
             .Setup(u => u.CreateAsync(It.IsAny<User>()))
@@ -161,12 +153,13 @@ public class TestRegisterAuthController : TestBase
 
         _authServiceMock.Setup(a => a.CreateAsync(It.IsAny<Auth>())).ReturnsAsync(false);
 
-        _usersServiceMock.Setup(u => u.CreateAsync(It.IsAny<User>())).ReturnsAsync("");
+        _usersServiceMock.Setup(u => u.CreateAsync(It.IsAny<User>())).ReturnsAsync("something");
 
         // Act
         var result = (ObjectResult)await _authController.Register(validUser);
 
         // Asssert
         result.StatusCode.Should().Be(500);
+        result.Value.Should().Be("Something wrong with Creating new User!");
     }
 }
