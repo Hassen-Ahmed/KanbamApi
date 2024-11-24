@@ -80,4 +80,18 @@ public class RefreshTokenRepo : IRefreshTokenRepo
 
         return Result<bool>.Success(true);
     }
+
+    public async Task<Result<bool>> DeleteRefreshTokenByUserId(string userId)
+    {
+        var filter = Builders<RefreshToken>.Filter.Eq(rt => rt.UserId, userId);
+        var result = await _kanbamDbContext.RefreshTokensCollection.DeleteOneAsync(filter);
+
+        if (result.DeletedCount == 0)
+        {
+            var err = new Error(404, "Not found.");
+            return Result<bool>.Failure(err);
+        }
+
+        return Result<bool>.Success(true);
+    }
 }
