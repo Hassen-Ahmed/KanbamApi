@@ -35,7 +35,11 @@ public class RefreshTokenService : IRefreshTokenService
         return await _refreshTokenRepo.GetRefreshTokensByToken(token);
     }
 
-    public async Task<Result<bool>> SaveRefreshTokenAsync(string userId, Guid refreshToken)
+    public async Task<Result<bool>> SaveRefreshTokenAsync(
+        string userId,
+        Guid refreshToken,
+        DateTime expirationDate
+    )
     {
         // preliminary validation
         if (string.IsNullOrWhiteSpace(userId))
@@ -54,7 +58,7 @@ public class RefreshTokenService : IRefreshTokenService
         {
             UserId = userId,
             Token = refreshToken,
-            TokenExpiryTime = DateTime.UtcNow.AddDays(7),
+            TokenExpiryTime = expirationDate,
         };
 
         var validationResult = await _refreshTokenValidator.ValidateAsync(refreshTokenNew);
@@ -76,7 +80,7 @@ public class RefreshTokenService : IRefreshTokenService
         return await _refreshTokenRepo.SaveRefreshToken(refreshTokenNew);
     }
 
-    public async Task<Result<bool>> Update_RefreshToken_ById_Async(string id, Guid newToken)
+    public async Task<Result<bool>> UpdateRefreshTokenByIdAsync(string id, Guid newToken)
     {
         return await _refreshTokenRepo.Update_RefreshToken_ById(id, newToken);
     }
@@ -91,5 +95,18 @@ public class RefreshTokenService : IRefreshTokenService
         }
 
         return await _refreshTokenRepo.DeleteRefreshToken(token);
+    }
+
+    public async Task<Result<bool>> DeleteRefreshTokenByUserIdAsync(string? userId)
+    {
+        if (string.IsNullOrEmpty(userId))
+        {
+            _logger.LogWarning($"Invalid userId : {userId}", userId);
+
+            var err = new Error(400, "userId cannot be null or empty.");
+            return Result<bool>.Failure(err);
+        }
+
+        return await _refreshTokenRepo.DeleteRefreshTokenByUserId(userId);
     }
 }
