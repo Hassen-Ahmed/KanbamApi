@@ -86,7 +86,7 @@ public class AuthController : ControllerBase
         var refreshToken = _tokenService.GenerateRefreshToken();
 
         // Save refresh token
-        var expireDate = DateTime.UtcNow.AddMinutes((int)TokenExpiration.RefreshTokenDate);
+        var expireDate = DateTime.UtcNow.AddDays((int)TokenExpiration.RefreshTokenDate);
 
         var isRefreshTokenSaved = await _refreshTokenService.SaveRefreshTokenAsync(
             user.Id,
