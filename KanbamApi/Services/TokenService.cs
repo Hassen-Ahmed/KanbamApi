@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using KanbamApi.Core;
 using KanbamApi.Services.Interfaces;
 using Microsoft.IdentityModel.Tokens;
 
@@ -8,13 +9,7 @@ namespace KanbamApi.Services;
 
 public class TokenService : ITokenService
 {
-    private readonly IConfiguration _configuration;
     private readonly string? SecretKey = DotNetEnv.Env.GetString("TOKEN_KEY");
-
-    public TokenService(IConfiguration configuration)
-    {
-        _configuration = configuration;
-    }
 
     public string GenerateAccessToken(IEnumerable<Claim> claims)
     {
@@ -22,19 +17,16 @@ public class TokenService : ITokenService
 
         SigningCredentials credentials = new(tokenKey, SecurityAlgorithms.HmacSha256Signature);
 
-    
-
         SecurityTokenDescriptor descriptor =
             new()
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddMinutes(15),
+                Expires = DateTime.UtcNow.AddMinutes((int)TokenExpiration.AccessTokenMinute),
                 NotBefore = DateTime.UtcNow.Subtract(TimeSpan.FromSeconds(1)),
                 IssuedAt = DateTime.UtcNow,
                 SigningCredentials = credentials,
-                  
-                // Issuer =  DotNetEnv.Env.GetString("VALID_ISSUER"),
-                // Audience = DotNetEnv.Env.GetString("VALID_AUDIENCE"),
+                Issuer = DotNetEnv.Env.GetString("VALID_ISSUER"),
+                Audience = DotNetEnv.Env.GetString("VALID_AUDIENCE"),
             };
 
         JwtSecurityTokenHandler tokenHandler = new();
@@ -46,38 +38,6 @@ public class TokenService : ITokenService
     public Guid GenerateRefreshToken()
     {
         return Guid.NewGuid();
-    }
-
-    public ClaimsPrincipal? ValidatePrincipal(string token)
-    {
-        if (SecretKey is null)
-            return null;
-
-        var tokenHandler = new JwtSecurityTokenHandler();
-        try
-        {
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SecretKey));
-            var principal = tokenHandler.ValidateToken(
-                token,
-                new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = "yourissuer",
-                    ValidAudience = "youraudience",
-                    IssuerSigningKey = key,
-                    ValidateLifetime = true
-                },
-                out _
-            );
-
-            return principal;
-        }
-        catch
-        {
-            return null;
-        }
     }
 
     public List<Claim> GenerateClaims(string username, string userId)
@@ -134,18 +94,17 @@ public class TokenService : ITokenService
                 expiredToken,
                 new TokenValidationParameters
                 {
-                    ValidateIssuer = false,
-                    ValidateAudience = false,
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
                     ValidateIssuerSigningKey = true,
-                    ValidateLifetime = false,
-                    // ValidIssuer = "your-issuer",
-                    // ValidAudience = "your-audience",
+                    ValidateLifetime = true,
+                    ValidIssuer = DotNetEnv.Env.GetString("VALID_ISSUER"),
+                    ValidAudience = DotNetEnv.Env.GetString("VALID_AUDIENCE"),
                     IssuerSigningKey = key
                 },
                 out SecurityToken validatedToken
             );
 
-            // Contains the claims from the expired token
             return principal;
         }
         catch (Exception)

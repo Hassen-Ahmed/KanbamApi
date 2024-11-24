@@ -8,8 +8,6 @@ namespace KanbamApi.Services.Interfaces
 
         Guid GenerateRefreshToken();
 
-        ClaimsPrincipal? ValidatePrincipal(string token);
-
         List<Claim> GenerateClaims(string username, string userId);
 
         // string HashRefreshToken(string token) ;

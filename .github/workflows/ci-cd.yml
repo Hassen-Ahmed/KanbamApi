@@ -66,6 +66,8 @@ jobs:
           echo "PASSWORD_KEY=${{secrets.PASSWORD_KEY}}" >> $GITHUB_ENV
           echo "TOKEN_REFRESH_KEY=${{secrets.TOKEN_REFRESH_KEY}}" >> $GITHUB_ENV
           echo "SECRET_KEY=${{secrets.SECRET_KEY}}" >> $GITHUB_ENV
+          echo "VALID_ISSUER=${{secrets.VALID_ISSUER}}" >> $GITHUB_ENV
+          echo "VALID_AUDIENCE=${{secrets.VALID_AUDIENCE}}" >> $GITHUB_ENV
 
       - name: Run Tests
         working-directory: Kanbam.Test

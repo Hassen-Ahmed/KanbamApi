@@ -104,14 +104,16 @@ builder
     {
         options.TokenValidationParameters = new()
         {
-            ValidateIssuer = false, // true ==>  later after hosted
-            ValidateAudience = false, // true ==>  later after hosted
+            ValidateIssuer = true,
+            ValidateAudience = true,
             ValidateIssuerSigningKey = true,
+            ClockSkew = TimeSpan.FromSeconds(0),
+            ValidateLifetime = true,
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(DotNetEnv.Env.GetString("TOKEN_KEY"))
             ),
-            // ValidIssuer = DotNetEnv.Env.GetString("VALID_ISSUER"),
-            // ValidAudience = DotNetEnv.Env.GetString("VALID_AUDIENCE"),
+            ValidIssuer = DotNetEnv.Env.GetString("VALID_ISSUER"),
+            ValidAudience = DotNetEnv.Env.GetString("VALID_AUDIENCE"),
         };
     });
 
