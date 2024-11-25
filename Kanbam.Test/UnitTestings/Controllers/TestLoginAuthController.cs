@@ -128,7 +128,7 @@ public class TestLoginAuthController : TestBase
     }
 
     [Fact]
-    public async Task Login_OnEmailNotExist_Return_401_Unauthorized()
+    public async Task Login_OnEmailNotExist_Return_400_BadRequest()
     {
         // Assign
         UserLogin validUser = UserLoginFixture.ValidUser();
@@ -145,11 +145,11 @@ public class TestLoginAuthController : TestBase
         var result = (ObjectResult)await _authController.Login(validUser);
 
         // Assert
-        result.StatusCode.Should().Be(401);
+        result.StatusCode.Should().Be(400);
     }
 
     [Fact]
-    public async Task Login_OnWrongPasswordHash_Return_401_UnAuthorized()
+    public async Task Login_OnWrongPasswordHash_Return_4400_BadRequest()
     {
         // Assign
         UserLogin validUser = UserLoginFixture.ValidUser();
@@ -175,11 +175,11 @@ public class TestLoginAuthController : TestBase
         var result = (ObjectResult)await _authController.Login(validUser);
 
         // Assert
-        result.StatusCode.Should().Be(401);
+        result.StatusCode.Should().Be(400);
     }
 
     [Fact]
-    public async Task Login_OnWrongUserId_Return_401_UnAuthorized()
+    public async Task Login_OnWrongUserId_Return_400_BadRequest()
     {
         // Assign
         UserLogin validUser = UserLoginFixture.ValidUser();
@@ -205,6 +205,6 @@ public class TestLoginAuthController : TestBase
         var result = (ObjectResult)await _authController.Login(validUser);
 
         // Assert
-        result.StatusCode.Should().Be(401);
+        result.StatusCode.Should().Be(400);
     }
 }
