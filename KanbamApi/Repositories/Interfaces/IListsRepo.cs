@@ -8,6 +8,7 @@ public interface IListsRepo
     Task<List<List>> GetAll();
     Task<bool> IsListIdExistByListId(string listId);
     Task<List<List>> GetAllByBoardId(string boardId);
+    Task<List<ListWithCards>> GetListsWithCardsByBoardId(string boardId);
     Task<List> Create(List newList);
     Task<bool> Patch(string id, DtoListsUpdate dtoListsUpdate);
 

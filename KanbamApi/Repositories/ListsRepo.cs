@@ -2,6 +2,7 @@ using KanbamApi.Data.Interfaces;
 using KanbamApi.Dtos.Update;
 using KanbamApi.Models;
 using KanbamApi.Repositories.Interfaces;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace KanbamApi.Repositories;
@@ -28,6 +29,42 @@ public class ListsRepo : IListsRepo
     {
         var filter = Builders<List>.Filter.Eq(l => l.BoardId, boardId);
         return await _kanbamDbContext.ListsCollection.FindSync(filter).ToListAsync();
+    }
+
+    public async Task<List<ListWithCards>> GetListsWithCardsByBoardId(string boardId)
+    {
+        var boardIdObject = new ObjectId(boardId);
+        var pipeline = new[]
+        {
+            new BsonDocument("$match", new BsonDocument("BoardId", boardIdObject)),
+            new BsonDocument(
+                "$lookup",
+                new BsonDocument
+                {
+                    { "from", "Cards" },
+                    { "localField", "_id" },
+                    { "foreignField", "ListId" },
+                    { "as", "Cards" }
+                }
+            ),
+            new BsonDocument(
+                "$project",
+                new BsonDocument
+                {
+                    { "_id", 1 },
+                    { "Title", "$Title" },
+                    { "BoardId", "$BoardId" },
+                    { "IndexNumber", "$IndexNumber" },
+                    { "Cards", "$Cards" }
+                }
+            )
+        };
+
+        var results = await _kanbamDbContext
+            .ListsCollection.Aggregate<ListWithCards>(pipeline)
+            .ToListAsync();
+
+        return results;
     }
 
     public async Task<List> Create(List newList)
