@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using KanbamApi.Core;
 using KanbamApi.Models;
 using KanbamApi.Models.AuthModels;
+using KanbamApi.Services;
 using KanbamApi.Services.Interfaces;
 using KanbamApi.Util;
 using Microsoft.AspNetCore.Mvc;
@@ -61,7 +62,7 @@ public class AuthController : ControllerBase
         var authEntity = await _authService.IsEmailExists(userLogin.Email);
 
         if (authEntity is null)
-            return Unauthorized(new { error = "Invalid email address." });
+            return BadRequest(new { error = "Invalid email address." });
 
         // Check if password is correct by creating hash and salt.
         byte[] passwordHash = _authService.GeneratePasswordHash(
@@ -71,13 +72,13 @@ public class AuthController : ControllerBase
 
         // Validate passwordHash
         if (!_authService.ValidatePasswordHash(passwordHash, authEntity.PasswordHash))
-            return Unauthorized(new { error = "Unauthorized Request!" });
+            return BadRequest(new { error = "Unauthorized Request!" });
 
         // Retrieve user details from database
         var user = await _usersService.GetUserByEmailAsync(userLogin.Email!);
 
         if (user is null)
-            return Unauthorized(new { error = "User not found." });
+            return BadRequest(new { error = "User not found." });
 
         // Generate tokens
         var claims = _tokenService.GenerateClaims(user.UserName!, user.Id);
@@ -85,9 +86,9 @@ public class AuthController : ControllerBase
         var accessToken = _tokenService.GenerateAccessToken(claims);
         var refreshToken = _tokenService.GenerateRefreshToken();
 
-        // Save refresh token
         var expireDate = DateTime.UtcNow.AddDays((int)TokenExpiration.RefreshTokenDate);
 
+        // Save refresh token
         var isRefreshTokenSaved = await _refreshTokenService.SaveRefreshTokenAsync(
             user.Id,
             refreshToken,
@@ -102,16 +103,8 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost(ApiRoutesAuth.RefreshToken)]
-    public async Task<IActionResult> RefreshToken([FromBody] AccessTokenExpired accessToken)
+    public async Task<IActionResult> RefreshToken()
     {
-        if (accessToken is null || string.IsNullOrEmpty(accessToken.expiredAccessToken))
-            return BadRequest(new { error = "Invalid request payload." });
-
-        var principal = _tokenService.DecodeExpiredToken(accessToken.expiredAccessToken);
-
-        if (principal is null)
-            return BadRequest(new { error = "Invalid access token received." });
-
         if (
             !Request.Cookies.TryGetValue(
                 $"{TokenType.RefreshToken}",
@@ -119,27 +112,19 @@ public class AuthController : ControllerBase
             )
         )
         {
-            await _refreshTokenService.DeleteRefreshTokenByUserIdAsync(
-                principal?.FindFirst("userId")?.Value
-            );
-
-            return Unauthorized(new { error = "No refresh token found." });
+            return BadRequest(new { error = "No refresh token found." });
         }
 
         // use detail like userId and username from expired accessToken
         if (!Guid.TryParse(refreshTokenFromCookie, out var refreshTokenParsed))
             return Unauthorized(new { error = "Invalid typeof refresh token." });
 
-        // get refreshToken from Databases
-        var storedRefreshToken = await _refreshTokenService.GetRefreshTokensByTokenAsync(
+        // get refreshToken entity from Databases
+        var storedRefreshTokenEntity = await _refreshTokenService.GetRefreshTokensByTokenAsync(
             refreshTokenParsed
         );
 
-        var isDataUpdated = await UpdateRefreshToken(
-            storedRefreshToken,
-            refreshTokenParsed,
-            principal
-        );
+        var isDataUpdated = await UpdateRefreshToken(storedRefreshTokenEntity, refreshTokenParsed);
 
         if (isDataUpdated.IsFailure)
         {
@@ -148,7 +133,7 @@ public class AuthController : ControllerBase
 
         SetRefreshTokenCookie(
             isDataUpdated.Value.NewRefreshToken,
-            storedRefreshToken.Value?.TokenExpiryTime
+            storedRefreshTokenEntity.Value?.TokenExpiryTime
         );
         return Ok(new { accessToken = isDataUpdated.Value.NewAccessToken });
     }
@@ -156,16 +141,12 @@ public class AuthController : ControllerBase
     [HttpPost(ApiRoutesAuth.Revoke)]
     public async Task<IActionResult> RevokeRefreshToken()
     {
-        // check if the user is authentic by expired refreshToken or accessToken
         if (
-            !Request.Cookies.TryGetValue(
-                $"{TokenType.RefreshToken}",
-                out var refreshTokenFromCookie
-            ) && !Guid.TryParse(refreshTokenFromCookie, out var refreshTokenParsed)
+            Request.Cookies.TryGetValue($"{TokenType.RefreshToken}", out var refreshTokenFromCookie)
+            && Guid.TryParse(refreshTokenFromCookie, out var refreshTokenParsed)
         )
         {
             await _refreshTokenService.DeleteRefreshTokenAsync(refreshTokenParsed);
-
             Response.Cookies.Delete($"{TokenType.RefreshToken}");
 
             return NoContent();
@@ -191,8 +172,7 @@ public class AuthController : ControllerBase
 
     private async Task<Result<string>> GenerateUsename(
         Result<RefreshToken> storedRefreshToken,
-        Guid refreshTokenParsed,
-        ClaimsPrincipal? principal
+        Guid refreshTokenParsed
     )
     {
         if (
@@ -204,15 +184,6 @@ public class AuthController : ControllerBase
             Response.Cookies.Delete($"{TokenType.RefreshToken}");
 
             Error error = new(401, "Invalid or expired refresh token.");
-            return Result<string>.Failure(error);
-        }
-
-        if (
-            principal is null
-            || storedRefreshToken.Value?.UserId != principal.FindFirst("userId")?.Value
-        )
-        {
-            Error error = new(401, "Invalid access token received.");
             return Result<string>.Failure(error);
         }
 
@@ -271,11 +242,10 @@ public class AuthController : ControllerBase
 
     private async Task<Result<NewTokens>> UpdateRefreshToken(
         Result<RefreshToken> storedRefreshToken,
-        Guid refreshTokenParsed,
-        ClaimsPrincipal? principal
+        Guid refreshTokenParsed
     )
     {
-        var username = await GenerateUsename(storedRefreshToken, refreshTokenParsed, principal);
+        var username = await GenerateUsename(storedRefreshToken, refreshTokenParsed);
 
         if (username.IsFailure)
         {
