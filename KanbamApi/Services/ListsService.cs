@@ -29,6 +29,9 @@ public class ListsService : IListsService
     public async Task<List<List>> GetAllByBoardIdAsync(string boardId) =>
         await _listsRepo.GetAllByBoardId(boardId);
 
+    public async Task<List<ListWithCards>> GetListsWithCardsByBoardIdAsync(string boardId) =>
+        await _listsRepo.GetListsWithCardsByBoardId(boardId);
+
     public async Task<List> CreateAsync(DtoListPost newListDto)
     {
         var filter = Builders<List>.Filter.Empty;

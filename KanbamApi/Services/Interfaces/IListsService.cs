@@ -9,6 +9,7 @@ public interface IListsService
     Task<List<List>> GetAllAsync();
     Task<bool> IsListIdExistByListIdAsync(string listId);
     Task<List<List>> GetAllByBoardIdAsync(string boardId);
+    Task<List<ListWithCards>> GetListsWithCardsByBoardIdAsync(string boardId);
     Task<List> CreateAsync(DtoListPost newListDto);
     Task<bool> PatchByIdAsync(string listId, DtoListsUpdate dtoListsUpdate);
     Task<bool> RemoveByIdAsync(string listId);
