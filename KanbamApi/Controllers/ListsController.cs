@@ -47,7 +47,7 @@ public class ListsController : ControllerBase
         }
         try
         {
-            var lists = await _listsService.GetAllByBoardIdAsync(boardId);
+            var lists = await _listsService.GetListsWithCardsByBoardIdAsync(boardId);
             return Ok(new { lists });
         }
         catch (Exception ex)
