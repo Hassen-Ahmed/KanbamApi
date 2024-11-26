@@ -181,7 +181,7 @@ public class AuthController : ControllerBase
         )
         {
             await _refreshTokenService.DeleteRefreshTokenAsync(refreshTokenParsed);
-            Response.Cookies.Delete($"{TokenType.RefreshToken}");
+            // Response.Cookies.Delete($"{TokenType.RefreshToken}");
 
             Error error = new(401, "Invalid or expired refresh token.");
             return Result<string>.Failure(error);
