@@ -89,7 +89,8 @@ builder.Services.AddCors(
             (corsBuilder) =>
             {
                 corsBuilder
-                    .WithOrigins("https://kanbam.netlify.app", "http://localhost:5173")
+                    .SetIsOriginAllowed(origin => true)
+                    // .WithOrigins("https://kanbam.netlify.app")
                     .AllowAnyMethod()
                     .AllowAnyHeader()
                     .AllowCredentials();
