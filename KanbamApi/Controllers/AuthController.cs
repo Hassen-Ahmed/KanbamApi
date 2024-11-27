@@ -165,7 +165,8 @@ public class AuthController : ControllerBase
                 HttpOnly = true,
                 Secure = true,
                 SameSite = SameSiteMode.Strict,
-                Expires = expirationDate
+                // Expires = expirationDate
+                Expires = DateTime.UtcNow.AddDays(2)
             }
         );
     }
