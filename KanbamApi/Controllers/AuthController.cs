@@ -1,9 +1,7 @@
-using System.Security.Claims;
 using System.Security.Cryptography;
 using KanbamApi.Core;
 using KanbamApi.Models;
 using KanbamApi.Models.AuthModels;
-using KanbamApi.Services;
 using KanbamApi.Services.Interfaces;
 using KanbamApi.Util;
 using Microsoft.AspNetCore.Mvc;
@@ -164,7 +162,7 @@ public class AuthController : ControllerBase
             {
                 HttpOnly = true,
                 Secure = true,
-                // SameSite = SameSiteMode.Strict,
+                SameSite = SameSiteMode.Strict,
                 Expires = expirationDate
             }
         );
