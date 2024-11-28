@@ -162,9 +162,9 @@ public class AuthController : ControllerBase
             refreshToken.ToString(),
             new CookieOptions
             {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Strict,
+                // HttpOnly = true,
+                // Secure = true,
+                // SameSite = SameSiteMode.Strict,
                 Expires = expirationDate
             }
         );
