@@ -3,6 +3,7 @@ using FluentValidation;
 using KanbamApi.Data;
 using KanbamApi.Data.Interfaces;
 using KanbamApi.Data.Seed;
+using KanbamApi.Hubs;
 using KanbamApi.Models;
 using KanbamApi.Repositories;
 using KanbamApi.Repositories.Interfaces;
@@ -63,7 +64,9 @@ builder.Services.AddScoped<IWorkspaceMemberService, WorkspaceMemberService>();
 // Seeding for testing
 builder.Services.AddScoped<IMongoDbSeeder, MongoDbSeeder>();
 
+//
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
 
 builder.Services.AddCors(
     (options) =>
@@ -99,7 +102,13 @@ builder.Services.AddCors(
 );
 
 builder
-    .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .Services.AddAuthentication(
+        (options) =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        }
+    )
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new()
@@ -114,6 +123,22 @@ builder
             ),
             ValidIssuer = DotNetEnv.Env.GetString("VALID_ISSUER"),
             ValidAudience = DotNetEnv.Env.GetString("VALID_AUDIENCE"),
+        };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = (context) =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+
+                var path = context.HttpContext.Request.Path;
+
+                if (!string.IsNullOrEmpty(accessToken) && (path.StartsWithSegments("/kanbamHubs")))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
         };
     });
 
@@ -172,6 +197,7 @@ app.UseAuthentication();
 
 app.UseAuthorization();
 
+app.MapHub<WorkspaceHub>("/kanbamHubs/workspaceHub");
 app.MapControllers();
 
 app.Run();
