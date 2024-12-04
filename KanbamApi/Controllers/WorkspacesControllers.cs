@@ -55,25 +55,6 @@ public class WorkspacesController : ControllerBase
         }
     }
 
-    //
-    // [HttpGet("{workspaceId}")]
-    // public async Task<IActionResult> GetWorkspaceId(string workspaceId)
-    // {
-    //     try
-    //     {
-    //         var res = await _workspaceService.GetWorkspaceById(workspaceId);
-    //         return StatusCode(200, res);
-    //     }
-    //     catch (Exception)
-    //     {
-    //         return StatusCode(
-    //             StatusCodes.Status400BadRequest,
-    //             "An error occurred while processing the request."
-    //         );
-    //     }
-    // }
-
-
     [HttpPost]
     public async Task<IActionResult> CreateBoard(DtoWorkspacePost newWorkspace)
     {
