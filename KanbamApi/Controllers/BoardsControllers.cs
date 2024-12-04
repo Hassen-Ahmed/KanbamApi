@@ -1,9 +1,11 @@
 using KanbamApi.Dtos.Posts;
 using KanbamApi.Dtos.Update;
+using KanbamApi.Hubs;
 using KanbamApi.Models;
 using KanbamApi.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using MongoDB.Bson;
 
 namespace KanbamApi.Controllers;
@@ -16,16 +18,19 @@ public class BoardsController : ControllerBase
     private readonly IBoardService _boardsService;
     private readonly IWorkspaceService _workspaceService;
     private readonly IWorkspaceMemberService _workspaceMemberService;
+    private readonly IHubContext<WorkspaceHub> _hubContext;
 
     public BoardsController(
         IBoardService boardsService,
         IWorkspaceService workspaceService,
-        IWorkspaceMemberService workspaceMemberService
+        IWorkspaceMemberService workspaceMemberService,
+        IHubContext<WorkspaceHub> hubContext
     )
     {
         _boardsService = boardsService;
         _workspaceService = workspaceService;
         _workspaceMemberService = workspaceMemberService;
+        _hubContext = hubContext;
     }
 
     [HttpGet]
@@ -81,6 +86,13 @@ public class BoardsController : ControllerBase
         try
         {
             await _boardsService.CreateAsync(userId!, newBoard);
+
+            var groupId = newBoard.WorkspaceId;
+
+            await _hubContext
+                .Clients.Group(groupId)
+                .SendAsync("ReceiveWorkspaceUpdate", newBoard, groupId);
+
             return StatusCode(201, newBoard);
         }
         catch (Exception ex)
