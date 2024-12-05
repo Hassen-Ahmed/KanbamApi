@@ -19,8 +19,5 @@ namespace KanbamApi.Models
 
         [Required]
         public string Description { get; set; } = string.Empty;
-
-        [Required]
-        public string Role { get; set; } = string.Empty;
     }
 }
