@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.SignalR;
 namespace KanbamApi.Hubs;
 
 [Authorize]
-public class WorkspaceHub : Hub
+public class BoardHub : Hub
 {
     public override async Task OnConnectedAsync()
     {
@@ -33,8 +33,12 @@ public class WorkspaceHub : Hub
         await base.OnDisconnectedAsync(exception);
     }
 
-    public async Task AddBoard(string groupId, DtoBoardPost items)
-    {
-        await Clients.Group(groupId).SendAsync("ReceiveWorkspaceUpdate", items, groupId);
-    }
+    public async Task AddBoard(string groupId, DtoBoardPost items) =>
+        await Clients.Group(groupId).SendAsync("ReceiveBoardCreated", items, groupId);
+
+    public async Task UdateBoard(string groupId, DtoBoardPost items) =>
+        await Clients.Group(groupId).SendAsync("ReceiveBoardUpdate", items, groupId);
+
+    public async Task DeleteBoard(string groupId, string boardId) =>
+        await Clients.Group(groupId).SendAsync("ReceiveBoardDelete", boardId, groupId);
 }
