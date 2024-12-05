@@ -63,7 +63,7 @@ namespace KanbamApi.Services
             }
         }
 
-        public async Task CreateAsync(string userId, DtoBoardPost newBoard)
+        public async Task<string?> CreateAsync(string userId, DtoBoardPost newBoard)
         {
             using var session = await _kanbamDbContext.MongoClient.StartSessionAsync();
             session.StartTransaction();
@@ -96,9 +96,11 @@ namespace KanbamApi.Services
                 if (boardMembers.Count > 0)
                 {
                     await _boardMemberRepo.CreateMany(boardMembers);
+                    return createdBoard.Id;
                 }
 
                 await session.CommitTransactionAsync();
+                return null;
             }
             catch (MongoException)
             {

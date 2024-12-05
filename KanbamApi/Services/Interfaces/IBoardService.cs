@@ -13,8 +13,7 @@ namespace KanbamApi.Services.Interfaces
             string workspaceId,
             string userId
         );
-
-        Task CreateAsync(string userId, DtoBoardPost newBoard);
+        Task<string?> CreateAsync(string userId, DtoBoardPost newBoard);
         Task<bool> PatchByIdAsync(string boardId, DtoBoardUpdate updateBoard, string userId);
         Task<bool> RemoveByIdAsync(string boardId, string userId);
         Task<bool> RemoveManyByWorkspaceIdAsync(string workspaceId);
