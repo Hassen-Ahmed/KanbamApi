@@ -1,7 +1,6 @@
 using KanbamApi.Dtos.Posts;
 using KanbamApi.Dtos.Update;
 using KanbamApi.Hubs;
-using KanbamApi.Models;
 using KanbamApi.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,13 +17,13 @@ public class BoardsController : ControllerBase
     private readonly IBoardService _boardsService;
     private readonly IWorkspaceService _workspaceService;
     private readonly IWorkspaceMemberService _workspaceMemberService;
-    private readonly IHubContext<WorkspaceHub> _hubContext;
+    private readonly IHubContext<BoardHub> _hubContext;
 
     public BoardsController(
         IBoardService boardsService,
         IWorkspaceService workspaceService,
         IWorkspaceMemberService workspaceMemberService,
-        IHubContext<WorkspaceHub> hubContext
+        IHubContext<BoardHub> hubContext
     )
     {
         _boardsService = boardsService;
@@ -85,15 +84,21 @@ public class BoardsController : ControllerBase
         var userId = User.FindFirst("userId")?.Value;
         try
         {
-            await _boardsService.CreateAsync(userId!, newBoard);
-
+            var boardId = await _boardsService.CreateAsync(userId!, newBoard);
             var groupId = newBoard.WorkspaceId;
+            var createdBoard = new
+            {
+                BoardId = boardId,
+                newBoard.WorkspaceId,
+                newBoard.Name,
+                newBoard.Description,
+            };
 
             await _hubContext
                 .Clients.Group(groupId)
-                .SendAsync("ReceiveWorkspaceUpdate", newBoard, groupId);
+                .SendAsync("ReceiveBoardCreated", createdBoard, $"{groupId}i_am_source");
 
-            return StatusCode(201, newBoard);
+            return StatusCode(201, createdBoard);
         }
         catch (Exception ex)
         {
@@ -119,11 +124,24 @@ public class BoardsController : ControllerBase
         if (!updated)
             return NotFound("Board not found or nothing to update.");
 
+        var groupId = updateBoard.WorkspaceId;
+        var updatedBoard = new
+        {
+            BoardId = boardId,
+            updateBoard.WorkspaceId,
+            updateBoard.Name,
+            updateBoard.Description,
+        };
+
+        await _hubContext
+            .Clients.Group(groupId!)
+            .SendAsync("ReceiveBoardUpdate", updatedBoard, $"{groupId}");
+
         return NoContent();
     }
 
-    [HttpDelete("{boardId}")]
-    public async Task<IActionResult> RemoveBoard(string boardId)
+    [HttpDelete("{boardId}/{workspaceId}")]
+    public async Task<IActionResult> RemoveBoard(string boardId, string workspaceId)
     {
         if (!ObjectId.TryParse(boardId, out var _))
         {
@@ -135,7 +153,17 @@ public class BoardsController : ControllerBase
         try
         {
             var res = await _boardsService.RemoveByIdAsync(boardId, userId!);
-            return res ? NoContent() : BadRequest();
+
+            if (!res)
+                BadRequest();
+
+            var groupId = workspaceId;
+
+            await _hubContext
+                .Clients.Group(groupId!)
+                .SendAsync("ReceiveBoardDelete", boardId, $"{groupId}");
+
+            return NoContent();
         }
         catch (Exception ex)
         {
