@@ -96,7 +96,7 @@ public class BoardsController : ControllerBase
 
             await _hubContext
                 .Clients.Group(groupId)
-                .SendAsync("ReceiveBoardCreated", createdBoard, $"{groupId}i_am_source");
+                .SendAsync("ReceiveBoardCreated", createdBoard, $"{groupId}");
 
             return StatusCode(201, createdBoard);
         }
