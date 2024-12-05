@@ -82,7 +82,6 @@ namespace KanbamApi.Repositories
                         { "WorkspaceId", "$boardsDetails.WorkspaceId" },
                         { "Name", "$boardsDetails.Name" },
                         { "Description", "$boardsDetails.Description" },
-                        { "Role", "$Role" },
                     }
                 )
             );
@@ -95,40 +94,6 @@ namespace KanbamApi.Repositories
                 .BoardMembersCollection.Aggregate<BoardWithMemberDetails>(pipeline)
                 .ToListAsync();
             return result;
-
-            // var pipeline = new[]
-            // {
-            //     new BsonDocument("$match", new BsonDocument("UserId", userObjectId)),
-            //     new BsonDocument(
-            //         "$lookup",
-            //         new BsonDocument
-            //         {
-            //             { "from", "Boards" },
-            //             { "localField", "BoardId" },
-            //             { "foreignField", "_id" },
-            //             { "as", "boardsDetails" }
-            //         }
-            //     ),
-            //     new BsonDocument("$unwind", "$boardsDetails"),
-            //     new BsonDocument(
-            //         "$project",
-            //         new BsonDocument
-            //         {
-            //             { "_id", 0 },
-            //             { "BoardId", "$boardsDetails._id" },
-            //             { "WorkspaceId", "$boardsDetails.WorkspaceId" },
-            //             { "Name", "$boardsDetails.Name" },
-            //             { "Description", "$boardsDetails.Description" },
-            //             { "Role", "$Role" },
-            //         }
-            //     ),
-            //     new BsonDocument("$match", new BsonDocument("WorkspaceId", workspaceObjectId)),
-            // };
-
-            // var result = await _kanbamDbContext
-            //     .BoardMembersCollection.Aggregate<BoardWithMemberDetails>(pipeline)
-            //     .ToListAsync();
-            // return result;
         }
 
         public async Task<List<Board>> Get_OnlyBoards_ByWorkspaceId(string workspaceId)
