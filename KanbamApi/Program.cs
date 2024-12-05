@@ -197,7 +197,7 @@ app.UseAuthentication();
 
 app.UseAuthorization();
 
-app.MapHub<WorkspaceHub>("/kanbamHubs/workspaceHub");
+app.MapHub<BoardHub>("/kanbamHubs/boardHub");
 app.MapControllers();
 
 app.Run();
