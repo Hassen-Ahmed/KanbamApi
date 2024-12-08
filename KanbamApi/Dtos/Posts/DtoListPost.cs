@@ -9,4 +9,5 @@ public class DtoListPost
 
     [Required]
     public string BoardId { get; set; } = string.Empty;
+    public int IndexNumber { get; set; }
 }

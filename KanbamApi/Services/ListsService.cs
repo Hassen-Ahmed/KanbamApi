@@ -34,18 +34,12 @@ public class ListsService : IListsService
 
     public async Task<List> CreateAsync(DtoListPost newListDto)
     {
-        var filter = Builders<List>.Filter.Empty;
-        CountOptions opts = new() { Hint = "_id_" };
-
-        var count = _kanbamDbContext.ListsCollection.CountDocuments(filter, opts);
-        var indexNumber = Convert.ToInt32(count);
-
         List newList =
             new()
             {
                 Title = newListDto.Title,
                 BoardId = newListDto.BoardId,
-                IndexNumber = indexNumber + 1,
+                IndexNumber = newListDto.IndexNumber,
             };
 
         var resList = await _listsRepo.Create(newList);
