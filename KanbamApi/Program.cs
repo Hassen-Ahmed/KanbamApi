@@ -198,6 +198,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapHub<BoardHub>("/kanbamHubs/boardHub");
+app.MapHub<ListHub>("/kanbamHubs/listHub");
+
 app.MapControllers();
 
 app.Run();
