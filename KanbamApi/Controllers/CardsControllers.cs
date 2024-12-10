@@ -81,6 +81,28 @@ public class CardsController : ControllerBase
         }
     }
 
+    [HttpPost("{cardId}/comment")]
+    public async Task<IActionResult> CreateComment(string cardId, [FromBody] Comment newComment)
+    {
+        if (!ObjectId.TryParse(cardId, out var _))
+        {
+            return BadRequest("Invalid id.");
+        }
+
+        try
+        {
+            var commentId = await _cardsService.CreateCommentAsync(cardId, newComment);
+
+            newComment.Id = commentId;
+
+            return commentId is not null ? Ok(new { newComment }) : BadRequest();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+        }
+    }
+
     [HttpPatch("{id}")]
     public async Task<IActionResult> UpdateCard(string id, DtoCardUpdate dtoCardUpdate)
     {
@@ -106,8 +128,8 @@ public class CardsController : ControllerBase
         }
         try
         {
-            var res = await _cardsService.RemoveByIdAsync(cardId);
-            return res ? NoContent() : BadRequest();
+            var result = await _cardsService.RemoveByIdAsync(cardId);
+            return result ? NoContent() : BadRequest();
         }
         catch (Exception ex)
         {
@@ -124,8 +146,25 @@ public class CardsController : ControllerBase
         }
         try
         {
-            var res = await _cardsService.RemoveByListIdAsync(listId);
-            return res ? NoContent() : BadRequest();
+            var result = await _cardsService.RemoveByListIdAsync(listId);
+            return result ? NoContent() : BadRequest();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+        }
+    }
+
+    [HttpDelete("{cardId}/{commentId}/comment")]
+    public async Task<IActionResult> RemoveCommentById(string cardId, string commentId)
+    {
+        if (!ObjectId.TryParse(cardId, out var _) || !ObjectId.TryParse(commentId, out var _))
+            return BadRequest("Invalid cardId or commentId.");
+
+        try
+        {
+            var result = await _cardsService.RemoveCommentByIdAsync(cardId, commentId);
+            return result ? NoContent() : BadRequest();
         }
         catch (Exception ex)
         {
