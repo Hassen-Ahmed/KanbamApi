@@ -45,6 +45,11 @@ public class CardsService : ICardsService
         return resCard;
     }
 
+    public async Task<string?> CreateCommentAsync(string cardId, Comment newComment)
+    {
+        return await _cardsRepo.CreateComment(cardId, newComment);
+    }
+
     public async Task<bool> PatchByIdAsync(string id, DtoCardUpdate dtoCardUpdate) =>
         await _cardsRepo.Patch(id, dtoCardUpdate);
 
@@ -52,4 +57,7 @@ public class CardsService : ICardsService
 
     public async Task<bool> RemoveByListIdAsync(string listId) =>
         await _cardsRepo.RemoveByListId(listId);
+
+    public async Task<bool> RemoveCommentByIdAsync(string cardId, string commentId) =>
+        await _cardsRepo.RemoveCommentById(cardId, commentId);
 }

@@ -53,7 +53,7 @@ public class DataGenerator
             .RuleFor(c => c.IndexNumber, f => f.IndexFaker)
             .RuleFor(c => c.Description, f => f.Lorem.Paragraph())
             .RuleFor(c => c.Priority, f => "")
-            .RuleFor(l => l.Comments, f => new List<string>());
+            .RuleFor(l => l.Comments, f => new List<Comment>());
 
         return fakerCards.Generate(count);
     }

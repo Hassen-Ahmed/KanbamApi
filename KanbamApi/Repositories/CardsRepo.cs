@@ -2,6 +2,7 @@ using KanbamApi.Data.Interfaces;
 using KanbamApi.Dtos.Update;
 using KanbamApi.Models;
 using KanbamApi.Repositories.Interfaces;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace KanbamApi.Repositories;
@@ -31,6 +32,23 @@ public class CardsRepo : ICardsRepo
     {
         await _kanbamDbContext.CardsCollection.InsertOneAsync(newCard);
         return newCard;
+    }
+
+    public async Task<string?> CreateComment(string cardId, Comment newComment)
+    {
+        newComment.Id = ObjectId.GenerateNewId().ToString();
+        newComment.CreatedAt = DateTime.UtcNow;
+
+        var filter = Builders<Card>.Filter.Eq(c => c.Id, cardId);
+
+        var update = Builders<Card>.Update.Push(c => c.Comments, newComment);
+
+        var result = await _kanbamDbContext.CardsCollection.UpdateOneAsync(filter, update);
+
+        if (result.ModifiedCount > 0)
+            return newComment.Id;
+
+        return null;
     }
 
     public async Task<bool> Patch(string id, DtoCardUpdate dtoCardUpdate)
@@ -75,5 +93,18 @@ public class CardsRepo : ICardsRepo
         var filter = Builders<Card>.Filter.Eq(c => c.ListId, listId);
         var res = await _kanbamDbContext.CardsCollection.DeleteManyAsync(filter);
         return res.DeletedCount > 0;
+    }
+
+    public async Task<bool> RemoveCommentById(string cardId, string commentId)
+    {
+        var filter = Builders<Card>.Filter.Eq(c => c.Id, cardId);
+        var update = Builders<Card>.Update.PullFilter(
+            c => c.Comments,
+            comment => comment.Id == commentId
+        );
+
+        var result = await _kanbamDbContext.CardsCollection.UpdateOneAsync(filter, update);
+
+        return result.ModifiedCount > 0;
     }
 }

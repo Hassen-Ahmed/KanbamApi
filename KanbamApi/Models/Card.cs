@@ -31,7 +31,7 @@ public class Card
     public string? Priority { get; set; }
 
     [BsonElement("Comments")]
-    public List<string>? Comments { get; set; }
+    public List<Comment> Comments { get; set; } = new List<Comment>();
 
     [BsonElement("StartDate")]
     public DateTime? StartDate { get; set; }
@@ -41,9 +41,4 @@ public class Card
 
     [BsonElement("DueDateReminder")]
     public DateTime? DueDateReminder { get; set; }
-
-    public Card()
-    {
-        Comments ??= [];
-    }
 }
