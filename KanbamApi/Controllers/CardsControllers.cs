@@ -1,10 +1,12 @@
 using KanbamApi.Dtos;
 using KanbamApi.Dtos.Update;
+using KanbamApi.Hubs;
 using KanbamApi.Models;
 using KanbamApi.Repositories.Interfaces;
 using KanbamApi.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using MongoDB.Bson;
 
 namespace KanbamApi.Controllers;
@@ -16,11 +18,17 @@ public class CardsController : ControllerBase
 {
     private readonly ICardsService _cardsService;
     private readonly IListsService _listsService;
+    private readonly IHubContext<CardHub> _hubContext;
 
-    public CardsController(ICardsService cardsService, IListsService listsService)
+    public CardsController(
+        ICardsService cardsService,
+        IListsService listsService,
+        IHubContext<CardHub> hubContext
+    )
     {
         _cardsService = cardsService;
         _listsService = listsService;
+        _hubContext = hubContext;
     }
 
     [HttpGet("{listId}/list")]
@@ -73,6 +81,13 @@ public class CardsController : ControllerBase
         try
         {
             var createdCard = await _cardsService.CreateAsync(dtoNewCard);
+
+            var groupId = dtoNewCard.ListId!;
+
+            await _hubContext
+                .Clients.Group(groupId)
+                .SendAsync("ReceiveCardCreated", createdCard, $"{groupId}");
+
             return StatusCode(201, createdCard);
         }
         catch (Exception ex)
@@ -92,10 +107,19 @@ public class CardsController : ControllerBase
         try
         {
             var commentId = await _cardsService.CreateCommentAsync(cardId, newComment);
+            var cardById = await _cardsService.GetOneByIdAsync(cardId);
+
+            if (commentId is null || cardById is null)
+                return BadRequest();
 
             newComment.Id = commentId;
+            var groupId = cardById.ListId;
 
-            return commentId is not null ? Ok(new { newComment }) : BadRequest();
+            await _hubContext
+                .Clients.Group(groupId)
+                .SendAsync("ReceiveCardCommentCreated", newComment, $"{groupId}");
+
+            return Ok(new { newComment });
         }
         catch (Exception ex)
         {
@@ -107,20 +131,26 @@ public class CardsController : ControllerBase
     public async Task<IActionResult> UpdateCard(string id, DtoCardUpdate dtoCardUpdate)
     {
         if (!ObjectId.TryParse(id, out var _))
-        {
             return BadRequest("Invalid id.");
-        }
 
         var updated = await _cardsService.PatchByIdAsync(id, dtoCardUpdate);
 
         if (!updated)
             return NotFound("Card not found or nothing to update.");
 
+        var userId = User.FindFirst("userId")?.Value;
+        dtoCardUpdate.Id = id;
+        var groupId = dtoCardUpdate.ListId;
+
+        await _hubContext
+            .Clients.Group(groupId!)
+            .SendAsync("ReceiveCardUpdate", dtoCardUpdate, userId, $"{groupId}");
+
         return NoContent();
     }
 
-    [HttpDelete("{cardId}/card")]
-    public async Task<IActionResult> RemoveById(string cardId)
+    [HttpDelete("{cardId}/card/{listId}")]
+    public async Task<IActionResult> RemoveById(string cardId, string listId)
     {
         if (!ObjectId.TryParse(cardId, out var _))
         {
@@ -129,7 +159,17 @@ public class CardsController : ControllerBase
         try
         {
             var result = await _cardsService.RemoveByIdAsync(cardId);
-            return result ? NoContent() : BadRequest();
+
+            if (!result)
+                return BadRequest();
+
+            var groupId = listId!;
+
+            await _hubContext
+                .Clients.Group(groupId)
+                .SendAsync("ReceiveCardDelete", cardId, $"{groupId}");
+
+            return NoContent();
         }
         catch (Exception ex)
         {
@@ -164,7 +204,17 @@ public class CardsController : ControllerBase
         try
         {
             var result = await _cardsService.RemoveCommentByIdAsync(cardId, commentId);
-            return result ? NoContent() : BadRequest();
+            var cardById = await _cardsService.GetOneByIdAsync(cardId);
+            if (!result || cardById is null)
+                return BadRequest();
+
+            var groupId = cardById.ListId;
+
+            await _hubContext
+                .Clients.Group(groupId)
+                .SendAsync("ReceiveCardCommentDelete", commentId, cardId, $"{groupId}");
+
+            return NoContent();
         }
         catch (Exception ex)
         {
