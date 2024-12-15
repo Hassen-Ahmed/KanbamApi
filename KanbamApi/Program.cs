@@ -92,7 +92,7 @@ builder.Services.AddCors(
             (corsBuilder) =>
             {
                 corsBuilder
-                    .WithOrigins("https://kanbam.netlify.app", "https://kanbam.onrender.com")
+                    .WithOrigins("https://kanbam.netlify.app")
                     .AllowAnyMethod()
                     .AllowAnyHeader()
                     .AllowCredentials();
@@ -199,6 +199,7 @@ app.UseAuthorization();
 
 app.MapHub<BoardHub>("/kanbamHubs/boardHub");
 app.MapHub<ListHub>("/kanbamHubs/listHub");
+app.MapHub<CardHub>("/kanbamHubs/cardHub");
 
 app.MapControllers();
 

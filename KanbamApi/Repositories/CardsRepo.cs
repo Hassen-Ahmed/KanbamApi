@@ -22,6 +22,12 @@ public class CardsRepo : ICardsRepo
         return await _kanbamDbContext.CardsCollection.FindSync(filter).ToListAsync();
     }
 
+    public async Task<Card> GetOneById(string id)
+    {
+        var filter = Builders<Card>.Filter.Eq(c => c.Id, id);
+        return await _kanbamDbContext.CardsCollection.FindSync(filter).FirstOrDefaultAsync();
+    }
+
     public async Task<List<Card>> GetByListId(string listId)
     {
         var filter = Builders<Card>.Filter.Eq(c => c.ListId, listId);

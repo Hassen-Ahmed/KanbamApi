@@ -1,10 +1,11 @@
 using KanbamApi.Dtos;
-using KanbamApi.Dtos.Update;
 using KanbamApi.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
 namespace KanbamApi.Hubs;
 
+[Authorize]
 public class ListHub : Hub
 {
     public override async Task OnConnectedAsync()

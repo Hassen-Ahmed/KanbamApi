@@ -24,21 +24,17 @@ public class CardsService : ICardsService
     public async Task<List<Card>> GetByListIdAsync(string listId) =>
         await _cardsRepo.GetByListId(listId);
 
+    public async Task<Card> GetOneByIdAsync(string cardId) => await _cardsRepo.GetOneById(cardId);
+
     public async Task<Card> CreateAsync(DtoCardPost dtoNewCard)
     {
-        var filter = Builders<Card>.Filter.Empty;
-        CountOptions opts = new() { Hint = "_id_" };
-
-        var count = _kanbamDbContext.CardsCollection.CountDocuments(filter, opts);
-        var indexNumber = Convert.ToInt32(count);
-
         Card newList =
             new()
             {
                 ListId = dtoNewCard.ListId!,
                 Title = dtoNewCard.Title!,
                 StartDate = dtoNewCard.StartDate,
-                IndexNumber = indexNumber + 1,
+                IndexNumber = dtoNewCard.IndexNumber,
             };
 
         var resCard = await _cardsRepo.Create(newList);
