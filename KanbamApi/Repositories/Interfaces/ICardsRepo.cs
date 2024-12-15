@@ -7,6 +7,7 @@ public interface ICardsRepo
 {
     Task<List<Card>> GetById(string listId);
     Task<List<Card>> GetByListId(string cardId);
+    Task<Card> GetOneById(string id);
     Task<Card> Create(Card newCard);
     Task<string?> CreateComment(string cardId, Comment newComment);
     Task<bool> Patch(string id, DtoCardUpdate dtoCardUpdate);
