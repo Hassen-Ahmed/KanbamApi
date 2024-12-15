@@ -4,6 +4,7 @@ namespace KanbamApi.Dtos.Update
 {
     public class DtoCardUpdate
     {
+        public string? Id { get; set; }
         public string? ListId { get; set; }
         public string? Title { get; set; }
         public int? IndexNumber { get; set; }
