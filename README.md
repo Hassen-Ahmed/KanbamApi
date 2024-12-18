@@ -22,12 +22,13 @@
 
 ### Tech Stack
 
-- **React.js**: Component based UI framework.
+- **React.js**: Component based UI library.
 - **TypeScript**: Type safe JavaScript.
-- **Sass/SCSS**: Streamlined styling.
+- **Sass/SCSS**: CSS preprocessor and Streamlined styling.
 - **Axios**: Manipulating data through HTTP requests.
 - **nivo**: Visual representation of project data.
 - **styled-components**: Theme management and styling.
+- **SignalR**: Real-time, two-way communication between the client and server facilitates live streaming and streamlines collaborative tasks or project management for users.
 
 ### Setup Instructions
 
@@ -47,11 +48,12 @@
    npm run dev
    ```
 4. **Access the Application**:
-   Open `http://localhost:3000` in your browser.
+   Open `http://localhost:5173` in your browser.
 
 ### Testing Guidelines
 
 - **Unit Tests**: Use `npm test` (requires Vitest configuration).
+- **Vitest setup**: **[VITEST.md](./readme_collection/VITEST.md)**
 
 ---
 
@@ -65,6 +67,9 @@
 - **C#**: Backend logic programming.
 - **MongoDB**: NoSQL database.
 - **Docker**: Containerized deployments.
+- **SignalR**: Real-time, two-way communication between the client and server facilitates live streaming and streamlines collaborative tasks or project management for users..
+- **Bogus**: Used to generate testing data.
+- **DotNetEnv**: Effortlessly store and retrieve sensitive data.
 
 ### Others
 
@@ -86,13 +91,15 @@
    dotnet watch run
    ```
 4. **Test the API**:
-   Use tools like Postman or cURL. The base URL is typically `http://localhost:5000`.
+   Use tools like Postman or cURL. The base URL is typically `http://localhost:5011`.
 
 ### API Endpoints
 
 - **Authentication**:
   - `POST /api/Auth/login`: User login.
   - `POST /api/Auth/register`: User registration.
+  - `POST /api/Auth/RefrshToken`: To retate refreshToken and accessToken.
+  - `POST /api/Auth/RevokeRefrshToken`: To delete refreshToken from Cookie and database.
 - **Workspaces**:
   - `GET /api/Workspaces`: Fetch all workspaces.
   - `POST /api/Workspaces`: Create a new workspaces.
@@ -109,7 +116,7 @@
   - `GET /api/boards/:workspaceId`: Fetch all boards by workspaceId.
   - `POST /api/boards`: Create a new board.
   - `PATCH /api/cards/:id`: Update Boards details.
-  - `DELETE /api/boards/:id`: Delete a board.
+  - `DELETE /api/boards/:id/:workspaceId`: Delete a board.
 - **BoardsMembers**:
   - `GET /api/BoardsMembers`: Fetch all BoardsMembers.
   - `GET /api/BoardsMembers/:workspaceId`: Fetch all BoardsMembers by workspaceId.
@@ -126,9 +133,13 @@
   - `GET /api/Cards/:listId/list`: Get all Cards for a Cards by listId.
   - `GET /api/Cards/:cardId/card`: Get all Cards for a Cards by cardid.
   - `POST /api/Cards`: Create a new card.
+  - `POST /api/Cards/:cardId/comment`: Create a new cardComment.
   - `PATCH /api/Cards/:id`: Update card details.
   - `DELETE /api/Cards/:id/card`: Delete a card by cardId.
   - `DELETE /api/Cards/:listId/list`: Delete a card by listId.
+  - `DELETE /api/Cards/:cardId/:commentId/comment`: Delete a cardComment.
+- **Doc**:
+  - `GET /api/`: For ping, status checking.
 
 ---
 
@@ -149,14 +160,17 @@ Define environment variables in a `.env.development` and `.env.production` file:
 ```bash
 TOKEN_KEY=...
 PASSWORD_KEY=...
+TOKEN_REFRESH_KEY=...
 
 
 CONNECTION_STRING=...
 DB_NAME=...
 AUTH_COLLECTION_NAME=...
 USERS_COLLECTION_NAME=...
+REFRESH_TOKENS_COLLECTION_NAME=...
 LISTS_COLLECTION_NAME=...
 CARDS_COLLECTION_NAME=...
+COMMENTS_COLLECTION_NAME=...
 VISITORS_COLLECTION_NAME=...
 
 BOARDS_COLLECTION_NAME=...
@@ -204,7 +218,6 @@ VALID_AUDIENCE=...
 
 ## Roadmap
 
-- **Real-Time Updates**: Implement WebSockets for live collaboration.
 - **Advanced Analytics**: Add Gantt chart views and team performance metrics.
 - **Localization**: Support multiple languages.
 - **Offline Mode**: Allow board access without connectivity, with synchronization.
