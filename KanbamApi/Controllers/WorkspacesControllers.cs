@@ -2,9 +2,9 @@ using KanbamApi.Dtos.Patch;
 using KanbamApi.Dtos.Posts;
 using KanbamApi.Models;
 using KanbamApi.Services.Interfaces;
+using KanbamApi.Util.Validators;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Bson;
 
 namespace KanbamApi.Controllers;
 
@@ -15,11 +15,20 @@ public class WorkspacesController : ControllerBase
 {
     private readonly IWorkspaceService _workspaceService;
     private readonly IUsersService _usersService;
+    private readonly ILogger<WorkspacesController> _logger;
+    private readonly IGeneralValidation _generalValidation;
 
-    public WorkspacesController(IWorkspaceService workspaceService, IUsersService usersService)
+    public WorkspacesController(
+        IWorkspaceService workspaceService,
+        IUsersService usersService,
+        ILogger<WorkspacesController> logger,
+        IGeneralValidation generalValidation
+    )
     {
         _workspaceService = workspaceService;
         _usersService = usersService;
+        _logger = logger;
+        _generalValidation = generalValidation;
     }
 
     [HttpGet]
@@ -28,14 +37,14 @@ public class WorkspacesController : ControllerBase
         var userId = User.FindFirst("userId")?.Value;
 
         if (userId is null)
-        {
             return Unauthorized("Wrong userId!");
-        }
 
         try
         {
             var userDetail = await _usersService.GetByIdAsync(userId);
             var workspaces = await _workspaceService.GetWorkspaces_With_Members_ByUserId(userId);
+            if (workspaces is null)
+                return NotFound();
 
             return Ok(
                 new
@@ -49,9 +58,13 @@ public class WorkspacesController : ControllerBase
                 }
             );
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            throw;
+            _logger.LogError(ex, "An error occurred while processing the request.");
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "An unexpected error occurred."
+            );
         }
     }
 
@@ -71,7 +84,11 @@ public class WorkspacesController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            _logger.LogError(ex, "An error occurred while processing the request.");
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "An unexpected error occurred."
+            );
         }
     }
 
@@ -81,10 +98,8 @@ public class WorkspacesController : ControllerBase
         DtoWorkspaceUpdate updateWorkspace
     )
     {
-        if (!ObjectId.TryParse(workspaceId, out var _))
-        {
+        if (!_generalValidation.IsValidObjectId(workspaceId))
             return BadRequest("Invalid workspaceId.");
-        }
 
         var userId = User.FindFirst("userId")?.Value!;
 
@@ -99,20 +114,23 @@ public class WorkspacesController : ControllerBase
     [HttpDelete("{workspaceId}")]
     public async Task<IActionResult> Delete(string workspaceId)
     {
-        if (!ObjectId.TryParse(workspaceId, out var _))
-        {
+        if (!_generalValidation.IsValidObjectId(workspaceId))
             return BadRequest("Invalid workspaceId.");
-        }
+
         try
         {
             var userId = User.FindFirst("userId")?.Value!;
             var res = await _workspaceService.Remove_With_MembersAsync(workspaceId, userId);
 
-            return res ? NoContent() : BadRequest();
+            return res ? NoContent() : NotFound();
         }
         catch (Exception ex)
         {
-            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            _logger.LogError(ex, "An error occurred while processing the request.");
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "An unexpected error occurred."
+            );
         }
     }
 }

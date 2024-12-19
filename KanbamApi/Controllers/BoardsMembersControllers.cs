@@ -1,6 +1,5 @@
 using KanbamApi.Dtos.Posts;
 using KanbamApi.Dtos.Update;
-using KanbamApi.Models;
 using KanbamApi.Services.Interfaces;
 using KanbamApi.Util.Validators;
 using Microsoft.AspNetCore.Authorization;
@@ -16,14 +15,17 @@ public class BoardsMembersController : ControllerBase
 {
     private readonly IBoardMemberService _boardMemberService;
     private readonly IGeneralValidation _generalValidation;
+    private readonly ILogger<BoardsMembersController> _logger;
 
     public BoardsMembersController(
         IBoardMemberService boardMemberService,
-        IGeneralValidation generalValidation
+        IGeneralValidation generalValidation,
+        ILogger<BoardsMembersController> logger
     )
     {
         _boardMemberService = boardMemberService;
         _generalValidation = generalValidation;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -32,21 +34,23 @@ public class BoardsMembersController : ControllerBase
         try
         {
             var boards = await _boardMemberService.GetAllAsync();
-            return Ok(new { boards });
+            return boards is not null ? Ok(new { boards }) : NotFound();
         }
         catch (Exception ex)
         {
-            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            _logger.LogError(ex, "An error occurred while processing the request.");
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "An unexpected error occurred."
+            );
         }
     }
 
     [HttpGet("{boardId}")]
     public async Task<IActionResult> GetAllBoardMembersByBoardId(string boardId)
     {
-        if (!ObjectId.TryParse(boardId, out var _))
-        {
+        if (!_generalValidation.IsValidObjectId(boardId))
             return BadRequest("Invalid boardId.");
-        }
 
         try
         {
@@ -55,7 +59,11 @@ public class BoardsMembersController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            _logger.LogError(ex, "An error occurred while processing the request.");
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "An unexpected error occurred."
+            );
         }
     }
 
@@ -63,9 +71,7 @@ public class BoardsMembersController : ControllerBase
     public async Task<IActionResult> CreateBoard(DtoBoardMemberPost newBoardMember)
     {
         if (!_generalValidation.IsValidEmail(newBoardMember.Email))
-        {
             return BadRequest("Invalid email address.");
-        }
 
         var currentUserId = User.FindFirst("userId")?.Value;
 
@@ -80,7 +86,11 @@ public class BoardsMembersController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            _logger.LogError(ex, "An error occurred while processing the request.");
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "An unexpected error occurred."
+            );
         }
     }
 
@@ -90,10 +100,8 @@ public class BoardsMembersController : ControllerBase
         [FromBody] DtoBoardMemberUpdate updateBoardMember
     )
     {
-        if (!ObjectId.TryParse(boardMemberId, out var _))
-        {
+        if (!_generalValidation.IsValidObjectId(boardMemberId))
             return BadRequest("Invalid boardMemberId.");
-        }
 
         var currentUserId = User.FindFirst("userId")?.Value;
 
@@ -112,20 +120,23 @@ public class BoardsMembersController : ControllerBase
     [HttpDelete("{boardMemberId}")]
     public async Task<IActionResult> Delete(string boardMemberId)
     {
-        if (!ObjectId.TryParse(boardMemberId, out var _))
-        {
+        if (!_generalValidation.IsValidObjectId(boardMemberId))
             return BadRequest("Invalid boardMemberId.");
-        }
+
         try
         {
             var currentUserId = User.FindFirst("userId")?.Value;
 
             var res = await _boardMemberService.RemoveById(boardMemberId, currentUserId!);
-            return res ? NoContent() : BadRequest();
+            return res ? NoContent() : NotFound();
         }
         catch (Exception ex)
         {
-            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            _logger.LogError(ex, "An error occurred while processing the request.");
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "An unexpected error occurred."
+            );
         }
     }
 }

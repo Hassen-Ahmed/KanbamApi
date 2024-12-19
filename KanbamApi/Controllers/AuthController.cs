@@ -94,7 +94,9 @@ public class AuthController : ControllerBase
         );
 
         if (isRefreshTokenSaved is null || !isRefreshTokenSaved.IsSuccess)
+        {
             return StatusCode(500, "An unknow error occured");
+        }
 
         SetRefreshTokenCookie(refreshToken, expireDate);
         return Ok(new { accessToken });

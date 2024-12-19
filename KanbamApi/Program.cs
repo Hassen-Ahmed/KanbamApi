@@ -31,6 +31,8 @@ else
 // Add services to the container.
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
 
 builder.Services.AddSingleton<IKanbamDbContext, KanbamDbContext>();
 

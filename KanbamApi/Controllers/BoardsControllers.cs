@@ -2,10 +2,10 @@ using KanbamApi.Dtos.Posts;
 using KanbamApi.Dtos.Update;
 using KanbamApi.Hubs;
 using KanbamApi.Services.Interfaces;
+using KanbamApi.Util.Validators;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using MongoDB.Bson;
 
 namespace KanbamApi.Controllers;
 
@@ -16,20 +16,24 @@ public class BoardsController : ControllerBase
 {
     private readonly IBoardService _boardsService;
     private readonly IWorkspaceService _workspaceService;
-    private readonly IWorkspaceMemberService _workspaceMemberService;
     private readonly IHubContext<BoardHub> _hubContext;
+    private readonly ILogger<BoardsController> _logger;
+    private readonly IGeneralValidation _generalValidation;
 
     public BoardsController(
         IBoardService boardsService,
         IWorkspaceService workspaceService,
         IWorkspaceMemberService workspaceMemberService,
-        IHubContext<BoardHub> hubContext
+        IHubContext<BoardHub> hubContext,
+        ILogger<BoardsController> logger,
+        IGeneralValidation generalValidation
     )
     {
         _boardsService = boardsService;
         _workspaceService = workspaceService;
-        _workspaceMemberService = workspaceMemberService;
         _hubContext = hubContext;
+        _logger = logger;
+        _generalValidation = generalValidation;
     }
 
     [HttpGet]
@@ -38,11 +42,15 @@ public class BoardsController : ControllerBase
         try
         {
             var boards = await _boardsService.GetAllAsync();
-            return Ok(new { boards });
+            return boards is not null ? Ok(new { boards }) : NotFound();
         }
         catch (Exception ex)
         {
-            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            _logger.LogError(ex, "An error occurred while processing the request.");
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "An unexpected error occurred."
+            );
         }
     }
 
@@ -50,12 +58,10 @@ public class BoardsController : ControllerBase
     public async Task<IActionResult> GetAllBoardsByWorkspaceId(string workspaceId)
     {
         if (
-            !ObjectId.TryParse(workspaceId, out var _)
+            !_generalValidation.IsValidObjectId(workspaceId)
             || !await _workspaceService.IsWorkspaceExist_Using_WorkspaceIdAsync(workspaceId)
         )
-        {
             return BadRequest("Invalid workspaceId.");
-        }
 
         try
         {
@@ -65,11 +71,15 @@ public class BoardsController : ControllerBase
                 userId!
             );
 
-            return Ok(new { boards });
+            return boards is not null ? Ok(new { boards }) : NotFound();
         }
         catch (Exception ex)
         {
-            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            _logger.LogError(ex, "An error occurred while processing the request.");
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "An unexpected error occurred."
+            );
         }
     }
 
@@ -77,9 +87,7 @@ public class BoardsController : ControllerBase
     public async Task<IActionResult> CreateBoard(DtoBoardPost newBoard)
     {
         if (!await _workspaceService.IsWorkspaceExist_Using_WorkspaceIdAsync(newBoard.WorkspaceId))
-        {
             return BadRequest("Invalid boardId.");
-        }
 
         var userId = User.FindFirst("userId")?.Value;
         try
@@ -94,15 +102,30 @@ public class BoardsController : ControllerBase
                 newBoard.Description,
             };
 
-            await _hubContext
-                .Clients.Group(groupId)
-                .SendAsync("ReceiveBoardCreated", createdBoard, $"{groupId}");
+            try
+            {
+                await _hubContext
+                    .Clients.Group(groupId)
+                    .SendAsync("ReceiveBoardCreated", createdBoard, $"{groupId}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while processing the request.");
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    "An unexpected error occurred."
+                );
+            }
 
             return StatusCode(201, createdBoard);
         }
         catch (Exception ex)
         {
-            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            _logger.LogError(ex, "An error occurred while processing the request.");
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "An unexpected error occurred."
+            );
         }
     }
 
@@ -112,10 +135,8 @@ public class BoardsController : ControllerBase
         [FromBody] DtoBoardUpdate updateBoard
     )
     {
-        if (!ObjectId.TryParse(boardId, out var _))
-        {
+        if (!_generalValidation.IsValidObjectId(boardId))
             return BadRequest("Invalid boardId.");
-        }
 
         var userId = User.FindFirst("userId")?.Value;
 
@@ -133,9 +154,20 @@ public class BoardsController : ControllerBase
             updateBoard.Description,
         };
 
-        await _hubContext
-            .Clients.Group(groupId!)
-            .SendAsync("ReceiveBoardUpdate", updatedBoard, $"{groupId}");
+        try
+        {
+            await _hubContext
+                .Clients.Group(groupId!)
+                .SendAsync("ReceiveBoardUpdate", updatedBoard, $"{groupId}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occurred while processing the request.");
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "An unexpected error occurred."
+            );
+        }
 
         return NoContent();
     }
@@ -143,10 +175,8 @@ public class BoardsController : ControllerBase
     [HttpDelete("{boardId}/{workspaceId}")]
     public async Task<IActionResult> RemoveBoard(string boardId, string workspaceId)
     {
-        if (!ObjectId.TryParse(boardId, out var _))
-        {
+        if (!_generalValidation.IsValidObjectId(boardId))
             return BadRequest("Invalid boardId.");
-        }
 
         var userId = User.FindFirst("userId")?.Value;
 
@@ -155,19 +185,34 @@ public class BoardsController : ControllerBase
             var res = await _boardsService.RemoveByIdAsync(boardId, userId!);
 
             if (!res)
-                BadRequest();
+                NotFound();
 
             var groupId = workspaceId;
 
-            await _hubContext
-                .Clients.Group(groupId!)
-                .SendAsync("ReceiveBoardDelete", boardId, $"{groupId}");
+            try
+            {
+                await _hubContext
+                    .Clients.Group(groupId!)
+                    .SendAsync("ReceiveBoardDelete", boardId, $"{groupId}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while processing the request.");
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    "An unexpected error occurred."
+                );
+            }
 
             return NoContent();
         }
         catch (Exception ex)
         {
-            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            _logger.LogError(ex, "An error occurred while processing the request.");
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "An unexpected error occurred."
+            );
         }
     }
 }

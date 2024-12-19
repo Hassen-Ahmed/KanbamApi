@@ -1,7 +1,6 @@
 using KanbamApi.Dtos.Update;
-using KanbamApi.Repositories;
-using KanbamApi.Repositories.Interfaces;
 using KanbamApi.Services.Interfaces;
+using KanbamApi.Util.Validators;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
@@ -14,8 +13,19 @@ namespace KanbamApi.Controllers;
 public class UsersController : ControllerBase
 {
     private readonly IUsersService _usersService;
+    private readonly ILogger<UsersController> _logger;
+    private readonly IGeneralValidation _generalValidation;
 
-    public UsersController(IUsersService usersService) => _usersService = usersService;
+    public UsersController(
+        IUsersService usersService,
+        ILogger<UsersController> logger,
+        IGeneralValidation generalValidation
+    )
+    {
+        _usersService = usersService;
+        _logger = logger;
+        _generalValidation = generalValidation;
+    }
 
     [HttpGet("{passcode}/secret")]
     public async Task<IActionResult> Get(string passcode)
@@ -26,35 +36,36 @@ public class UsersController : ControllerBase
             return StatusCode(400, "Bad request");
 
         var users = await _usersService.GetAllAsync();
-        return Ok(new { users });
+        return users is not null ? Ok(new { users }) : NotFound();
     }
 
     [HttpGet("{userId}")]
     public async Task<IActionResult> GetById(string userId)
     {
-        if (!ObjectId.TryParse(userId, out var _))
-        {
+        if (!_generalValidation.IsValidObjectId(userId))
             return BadRequest("Invalid boardId.");
-        }
+
         try
         {
             var res = await _usersService.GetByIdAsync(userId);
 
-            return Ok(new { user = res[0] });
+            return res is not null ? Ok(new { user = res[0] }) : NotFound();
         }
         catch (Exception ex)
         {
-            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            _logger.LogError(ex, "An error occurred while processing the request.");
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "An unexpected error occurred."
+            );
         }
     }
 
     [HttpPatch("{userId}")]
     public async Task<IActionResult> Update(string userId, DtoUsersUpdate updateUser)
     {
-        if (!ObjectId.TryParse(userId, out var _))
-        {
+        if (!_generalValidation.IsValidObjectId(userId))
             return BadRequest("Invalid userId.");
-        }
 
         var updated = await _usersService.PatchByIdAsync(userId, updateUser);
 
