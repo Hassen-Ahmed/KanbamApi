@@ -15,14 +15,17 @@ public class WorkspacesMembersController : ControllerBase
 {
     private readonly IWorkspaceMemberService _workspaceMemberService;
     private readonly IGeneralValidation _generalValidation;
+    private readonly ILogger<WorkspacesMembersController> _logger;
 
     public WorkspacesMembersController(
         IWorkspaceMemberService workspaceMemberService,
-        IGeneralValidation generalValidation
+        IGeneralValidation generalValidation,
+        ILogger<WorkspacesMembersController> logger
     )
     {
         _workspaceMemberService = workspaceMemberService;
         _generalValidation = generalValidation;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -31,11 +34,15 @@ public class WorkspacesMembersController : ControllerBase
         try
         {
             var workspacesMembers = await _workspaceMemberService.Get();
-            return Ok(new { workspacesMembers });
+            return workspacesMembers is not null ? Ok(new { workspacesMembers }) : NotFound();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            throw;
+            _logger.LogError(ex, "An error occurred while processing the request.");
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "An unexpected error occurred."
+            );
         }
     }
 
@@ -48,11 +55,15 @@ public class WorkspacesMembersController : ControllerBase
                 workspaceId
             );
 
-            return Ok(new { workspacesMembers });
+            return workspacesMembers is not null ? Ok(new { workspacesMembers }) : NotFound();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            throw;
+            _logger.LogError(ex, "An error occurred while processing the request.");
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "An unexpected error occurred."
+            );
         }
     }
 
@@ -79,7 +90,11 @@ public class WorkspacesMembersController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            _logger.LogError(ex, "An error occurred while processing the request.");
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "An unexpected error occurred."
+            );
         }
     }
 
@@ -89,10 +104,8 @@ public class WorkspacesMembersController : ControllerBase
         [FromBody] DtoWorkspaceMemberUpdate updateWorkspaceMember
     )
     {
-        if (!ObjectId.TryParse(workspaceMemberId, out var _))
-        {
+        if (!_generalValidation.IsValidObjectId(workspaceMemberId))
             return BadRequest("Invalid workspaceMemberId.");
-        }
 
         var currentUserId = User.FindFirst("userId")?.Value;
 
@@ -111,10 +124,9 @@ public class WorkspacesMembersController : ControllerBase
     [HttpDelete("{workspaceMemberId}")]
     public async Task<IActionResult> Delete(string workspaceMemberId)
     {
-        if (!ObjectId.TryParse(workspaceMemberId, out var _))
-        {
+        if (!_generalValidation.IsValidObjectId(workspaceMemberId))
             return BadRequest("Invalid workspaceMemberId.");
-        }
+
         try
         {
             var currentUserId = User.FindFirst("userId")?.Value;
@@ -122,11 +134,15 @@ public class WorkspacesMembersController : ControllerBase
                 workspaceMemberId,
                 currentUserId!
             );
-            return res ? NoContent() : BadRequest();
+            return res ? NoContent() : NotFound();
         }
         catch (Exception ex)
         {
-            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            _logger.LogError(ex, "An error occurred while processing the request.");
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "An unexpected error occurred."
+            );
         }
     }
 }

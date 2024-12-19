@@ -3,6 +3,7 @@ using KanbamApi.Dtos.Update;
 using KanbamApi.Hubs;
 using KanbamApi.Models;
 using KanbamApi.Services.Interfaces;
+using KanbamApi.Util.Validators;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -18,16 +19,22 @@ public class ListsController : ControllerBase
     private readonly IListsService _listsService;
     private readonly IBoardService _boardService;
     private readonly IHubContext<ListHub> _hubContext;
+    private readonly ILogger<ListsController> _logger;
+    private readonly IGeneralValidation _generalValidation;
 
     public ListsController(
         IListsService listsService,
         IBoardService boardService,
-        IHubContext<ListHub> hubContext
+        IHubContext<ListHub> hubContext,
+        ILogger<ListsController> logger,
+        IGeneralValidation generalValidation
     )
     {
         _listsService = listsService;
         _boardService = boardService;
         _hubContext = hubContext;
+        _logger = logger;
+        _generalValidation = generalValidation;
     }
 
     [HttpGet]
@@ -36,11 +43,15 @@ public class ListsController : ControllerBase
         try
         {
             var lists = await _listsService.GetAllAsync();
-            return Ok(new { lists });
+            return lists is not null ? Ok(new { lists }) : NotFound();
         }
         catch (Exception ex)
         {
-            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            _logger.LogError(ex, "An error occurred while processing the request.");
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "An unexpected error occurred."
+            );
         }
     }
 
@@ -57,11 +68,15 @@ public class ListsController : ControllerBase
         try
         {
             var lists = await _listsService.GetListsWithCardsByBoardIdAsync(boardId);
-            return Ok(new { lists });
+            return lists is not null ? Ok(new { lists }) : NotFound();
         }
         catch (Exception ex)
         {
-            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            _logger.LogError(ex, "An error occurred while processing the request.");
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "An unexpected error occurred."
+            );
         }
     }
 
@@ -79,25 +94,39 @@ public class ListsController : ControllerBase
 
             var groupId = newListDto.BoardId;
 
-            await _hubContext
-                .Clients.Group(groupId)
-                .SendAsync("ReceiveListCreated", createdList, $"{groupId}");
+            try
+            {
+                await _hubContext
+                    .Clients.Group(groupId)
+                    .SendAsync("ReceiveListCreated", createdList, $"{groupId}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while processing the request.");
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    "An unexpected error occurred."
+                );
+            }
 
             return StatusCode(201, createdList);
         }
         catch (Exception ex)
         {
-            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            _logger.LogError(ex, "An error occurred while processing the request.");
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "An unexpected error occurred."
+            );
         }
     }
 
     [HttpPatch("{listId}")]
     public async Task<IActionResult> UpdateList(string listId, DtoListsUpdate dtoListsUpdate)
     {
-        if (!ObjectId.TryParse(listId, out var _))
-        {
+        if (!_generalValidation.IsValidObjectId(listId))
             return BadRequest("Invalid listId.");
-        }
+
         var updated = await _listsService.PatchByIdAsync(listId, dtoListsUpdate);
 
         if (!updated)
@@ -114,9 +143,20 @@ public class ListsController : ControllerBase
 
         var groupId = dtoListsUpdate.BoardId;
 
-        await _hubContext
-            .Clients.Group(groupId!)
-            .SendAsync("ReceiveListUpdate", updatedList, userId, $"{groupId}");
+        try
+        {
+            await _hubContext
+                .Clients.Group(groupId!)
+                .SendAsync("ReceiveListUpdate", updatedList, userId, $"{groupId}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occurred while processing the request.");
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "An unexpected error occurred."
+            );
+        }
 
         return NoContent();
     }
@@ -124,28 +164,42 @@ public class ListsController : ControllerBase
     [HttpDelete("{listId}/{boardId}")]
     public async Task<IActionResult> Delete(string listId, string boardId)
     {
-        if (!ObjectId.TryParse(listId, out var _))
-        {
+        if (!_generalValidation.IsValidObjectId(listId))
             return BadRequest("Invalid listId.");
-        }
+
         try
         {
             var res = await _listsService.RemoveByIdAsync(listId);
 
             if (!res)
-                return BadRequest();
+                return NotFound();
 
             var groupId = boardId;
 
-            await _hubContext
-                .Clients.Group(groupId)
-                .SendAsync("ReceiveListDelete", listId, $"{groupId}");
+            try
+            {
+                await _hubContext
+                    .Clients.Group(groupId)
+                    .SendAsync("ReceiveListDelete", listId, $"{groupId}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while processing the request.");
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    "An unexpected error occurred."
+                );
+            }
 
             return NoContent();
         }
         catch (Exception ex)
         {
-            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            _logger.LogError(ex, "An error occurred while processing the request.");
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "An unexpected error occurred."
+            );
         }
     }
 }
