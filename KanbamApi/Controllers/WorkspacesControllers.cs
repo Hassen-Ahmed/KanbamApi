@@ -14,19 +14,16 @@ namespace KanbamApi.Controllers;
 public class WorkspacesController : ControllerBase
 {
     private readonly IWorkspaceService _workspaceService;
-    private readonly IUsersService _usersService;
     private readonly ILogger<WorkspacesController> _logger;
     private readonly IGeneralValidation _generalValidation;
 
     public WorkspacesController(
         IWorkspaceService workspaceService,
-        IUsersService usersService,
         ILogger<WorkspacesController> logger,
         IGeneralValidation generalValidation
     )
     {
         _workspaceService = workspaceService;
-        _usersService = usersService;
         _logger = logger;
         _generalValidation = generalValidation;
     }
@@ -41,22 +38,11 @@ public class WorkspacesController : ControllerBase
 
         try
         {
-            var userDetail = await _usersService.GetByIdAsync(userId);
             var workspaces = await _workspaceService.GetWorkspaces_With_Members_ByUserId(userId);
             if (workspaces is null)
                 return NotFound();
 
-            return Ok(
-                new
-                {
-                    workspaces,
-                    userDetail = new Dictionary<string, string>
-                    {
-                        { "userName", userDetail[0].UserName! },
-                        { "email", userDetail[0].Email! },
-                    },
-                }
-            );
+            return Ok(new { workspaces });
         }
         catch (Exception ex)
         {
