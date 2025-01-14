@@ -1,34 +1,21 @@
 namespace KanbamApi.Util;
 
-public class Error
+public class Error(int code, string message)
 {
-    public int CodeStatus { get; }
-    public string Message { get; }
-
-    public Error(int code, string message)
-    {
-        CodeStatus = code;
-        Message = message;
-    }
+    public int CodeStatus { get; } = code;
+    public string Message { get; } = message;
 
     public override string ToString() => $"{CodeStatus}: {Message}";
 }
 
-public class Result<T>
+public class Result<T>(bool isSuccess, T value, Error error)
 {
-    public bool IsSuccess { get; }
+    public bool IsSuccess { get; } = isSuccess;
     public bool IsFailure => !IsSuccess;
-    public Error Error { get; }
-    public T Value { get; }
+    public Error Error { get; } = error;
+    public T Value { get; } = value;
 
-    protected Result(bool isSuccess, T value, Error error)
-    {
-        IsSuccess = isSuccess;
-        Value = value;
-        Error = error;
-    }
+    public static Result<T> Success(T value) => new(true, value, null!);
 
-    public static Result<T> Success(T value) => new Result<T>(true, value, null!);
-
-    public static Result<T> Failure(Error error) => new Result<T>(false, default!, error);
+    public static Result<T> Failure(Error error) => new(false, default!, error);
 }
