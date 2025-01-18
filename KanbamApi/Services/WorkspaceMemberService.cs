@@ -2,8 +2,10 @@ using KanbamApi.Dtos;
 using KanbamApi.Dtos.Posts;
 using KanbamApi.Dtos.Put;
 using KanbamApi.Models;
+using KanbamApi.Models.MongoDbIdentity;
 using KanbamApi.Repositories.Interfaces;
 using KanbamApi.Services.Interfaces;
+using Microsoft.AspNetCore.Identity;
 
 namespace KanbamApi.Services
 {
@@ -12,19 +14,19 @@ namespace KanbamApi.Services
         private readonly IWorkspaceMembersRepo _workspacesMemberRepo;
         private readonly IBoardsRepo _boardsRepo;
         private readonly IBoardMemberRepo _boardMemberRepo;
-        private readonly IUsersService _usersService;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         public WorkspaceMemberService(
             IWorkspaceMembersRepo workspacesMemberRepo,
             IBoardsRepo boardsRepo,
             IBoardMemberRepo boardMemberRepo,
-            IUsersService usersService
+            UserManager<ApplicationUser> userManager
         )
         {
             _workspacesMemberRepo = workspacesMemberRepo;
             _boardsRepo = boardsRepo;
             _boardMemberRepo = boardMemberRepo;
-            _usersService = usersService;
+            _userManager = userManager;
         }
 
         public async Task<List<WorkspaceMember>> Get()
@@ -46,9 +48,9 @@ namespace KanbamApi.Services
             string? currentUserId
         )
         {
-            var userDetail = await _usersService.GetUserByEmailAsync(newWorspaceMember.Email);
+            var user = await _userManager.FindByEmailAsync(newWorspaceMember.Email);
 
-            if (userDetail is null || userDetail.Id.Equals(currentUserId))
+            if (user is null || user.Id.ToString() == currentUserId)
             {
                 return false;
             }
@@ -65,7 +67,7 @@ namespace KanbamApi.Services
             var isUserAMember =
                 await _workspacesMemberRepo.IsUserAMember_Using_WorkspaceId_And_UserId(
                     newWorspaceMember.WorkspaceId,
-                    userDetail.Id
+                    user.Id.ToString()
                 );
 
             if (isUserAMember)
@@ -74,7 +76,7 @@ namespace KanbamApi.Services
             WorkspaceMember newMember =
                 new()
                 {
-                    UserId = userDetail.Id,
+                    UserId = user.Id.ToString(),
                     WorkspaceId = newWorspaceMember.WorkspaceId,
                     Role = newWorspaceMember.Role,
                     BoardAccessLevel = "All"
@@ -90,7 +92,7 @@ namespace KanbamApi.Services
                 .Select(board => new BoardMember
                 {
                     BoardId = board.Id,
-                    UserId = userDetail.Id,
+                    UserId = user.Id.ToString(),
                     Role = newWorspaceMember.Role
                 })
                 .ToList();

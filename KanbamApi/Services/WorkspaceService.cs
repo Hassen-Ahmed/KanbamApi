@@ -11,7 +11,6 @@ namespace KanbamApi.Services
     {
         private readonly IWorkspacesRepo _workspacesRepo;
         private readonly IWorkspaceMembersRepo _workspacesMemberRepo;
-        private readonly IBoardService _boardMemberService;
         private readonly IKanbamDbContext _kanbamDbContext;
 
         public WorkspaceService(
@@ -23,12 +22,8 @@ namespace KanbamApi.Services
         {
             _workspacesRepo = workspacesRepo;
             _workspacesMemberRepo = workspacesMemberRepo;
-            _boardMemberService = boardService;
             _kanbamDbContext = kanbamDbContext;
         }
-
-        // public async Task<IEnumerable<Workspace>> GetWorkspaceById(string workspaceId) =>
-        //     await _workspacesRepo.GetById(workspaceId);
 
         public async Task<bool> IsWorkspaceExist_Using_WorkspaceIdAsync(string workspaceId)
         {

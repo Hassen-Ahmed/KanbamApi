@@ -1,33 +1,31 @@
-using KanbamApi.Data.Interfaces;
 using KanbamApi.Dtos;
 using KanbamApi.Dtos.Posts;
 using KanbamApi.Dtos.Update;
 using KanbamApi.Models;
+using KanbamApi.Models.MongoDbIdentity;
 using KanbamApi.Repositories.Interfaces;
 using KanbamApi.Services.Interfaces;
+using Microsoft.AspNetCore.Identity;
 
 namespace KanbamApi.Services
 {
     public class BoardMemberService : IBoardMemberService
     {
         private readonly IBoardMemberRepo _boardMemberRepo;
-        private readonly IKanbamDbContext _kanbamDbContext;
-        private readonly IUsersService _usersService;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly IBoardService _boardService;
         private readonly IWorkspaceMembersRepo _workspaceMembersRepo;
 
         public BoardMemberService(
             IBoardMemberRepo boardMemberRepo,
-            IKanbamDbContext kanbamDbContext,
-            IUsersService usersService,
+            UserManager<ApplicationUser> userManager,
             IBoardService boardService,
             IWorkspaceMembersRepo workspaceMembersRepo
         )
         {
             _boardService = boardService;
             _boardMemberRepo = boardMemberRepo;
-            _kanbamDbContext = kanbamDbContext;
-            _usersService = usersService;
+            _userManager = userManager;
             _workspaceMembersRepo = workspaceMembersRepo;
         }
 
@@ -47,9 +45,9 @@ namespace KanbamApi.Services
             string? currentUserId
         )
         {
-            var useDetail = await _usersService.GetUserByEmailAsync(newBoardMember.Email);
+            var user = await _userManager.FindByEmailAsync(newBoardMember.Email);
 
-            if (useDetail is null || useDetail.Equals(currentUserId))
+            if (user is null || user.Id.ToString() == currentUserId)
             {
                 return false;
             }
@@ -66,7 +64,7 @@ namespace KanbamApi.Services
             BoardMember newMember =
                 new()
                 {
-                    UserId = useDetail.Id,
+                    UserId = user.Id.ToString(),
                     BoardId = newBoardMember.BoardId,
                     Role = newBoardMember.Role,
                 };
@@ -74,7 +72,7 @@ namespace KanbamApi.Services
             WorkspaceMember newWorkspaceMember =
                 new()
                 {
-                    UserId = useDetail.Id,
+                    UserId = user.Id.ToString(),
                     WorkspaceId = workspaceId,
                     Role = newBoardMember.Role,
                     BoardAccessLevel = "Some"

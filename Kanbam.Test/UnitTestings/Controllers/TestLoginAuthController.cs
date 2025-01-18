@@ -2,24 +2,20 @@ using FluentAssertions;
 using Kanbam.Test.UnitTestings.Fixtures;
 using Kanbam.Test.UnitTestings.Reset;
 using KanbamApi.Controllers;
-using KanbamApi.Models;
 using KanbamApi.Models.AuthModels;
+using KanbamApi.Models.MongoDbIdentity;
 using KanbamApi.Services.Interfaces;
-using KanbamApi.Util;
-using KanbamApi.Util.Generators.SecureData.Interfaces;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using Moq;
 
 namespace Kanbam.Test.UnitTestings.Controllers;
 
 public class TestLoginAuthController : TestBase
 {
-    private readonly Mock<IUsersService> _usersServiceMock;
-    private readonly Mock<IAuthService> _authServiceMock;
+    private readonly Mock<UserManager<ApplicationUser>> _userManagerMock;
     private readonly Mock<ITokenService> _tokenServiceMock;
-    private readonly Mock<IRefreshTokenService> _refreshTokenServiceMock;
     private readonly Mock<HttpContext> _mockHttpContext;
     private readonly Mock<HttpResponse> _mockHttpResponse;
     private readonly Mock<IResponseCookies> _mockResponseCookies;
@@ -27,21 +23,23 @@ public class TestLoginAuthController : TestBase
 
     public TestLoginAuthController()
     {
-        _usersServiceMock = new Mock<IUsersService>();
-        _authServiceMock = new Mock<IAuthService>();
         _tokenServiceMock = new Mock<ITokenService>();
-        _refreshTokenServiceMock = new Mock<IRefreshTokenService>();
+        _userManagerMock = new Mock<UserManager<ApplicationUser>>(
+            new Mock<IUserStore<ApplicationUser>>().Object,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!
+        );
+        _authController = new AuthController(_tokenServiceMock.Object, _userManagerMock.Object);
 
         _mockHttpContext = new Mock<HttpContext>();
         _mockHttpResponse = new Mock<HttpResponse>();
         _mockResponseCookies = new Mock<IResponseCookies>();
-
-        _authController = new AuthController(
-            _usersServiceMock.Object,
-            _authServiceMock.Object,
-            _tokenServiceMock.Object,
-            _refreshTokenServiceMock.Object
-        );
     }
 
     [Fact]
@@ -50,6 +48,11 @@ public class TestLoginAuthController : TestBase
         // Assign
 
         UserLogin validUser = UserLoginFixture.ValidUser();
+        var user = new ApplicationUser
+        {
+            Email = validUser.Email,
+            UserName = validUser.Email.Split("@").FirstOrDefault()
+        };
 
         _mockHttpResponse.Setup(r => r.Cookies).Returns(_mockResponseCookies.Object);
         _mockHttpContext.Setup(c => c.Response).Returns(_mockHttpResponse.Object);
@@ -58,34 +61,15 @@ public class TestLoginAuthController : TestBase
             HttpContext = _mockHttpContext.Object
         };
 
-        _authServiceMock
-            .Setup(a => a.IsEmailExists(It.IsAny<string>()))
-            .ReturnsAsync(
-                new Auth()
-                {
-                    Email = "test@gmail.com",
-                    PasswordHash = new byte[128 / 8],
-                    PasswordSalt = new byte[128 / 8]
-                }
-            );
+        _userManagerMock.Setup(um => um.FindByEmailAsync(It.IsAny<string>())).ReturnsAsync(user);
 
-        _authServiceMock
-            .Setup(a => a.ValidatePasswordHash(It.IsAny<byte[]>(), It.IsAny<byte[]>()))
-            .Returns(true);
+        _userManagerMock
+            .Setup(um => um.CheckPasswordAsync(user, It.IsAny<string>()))
+            .ReturnsAsync(true);
 
-        _usersServiceMock
-            .Setup(u => u.GetUserByEmailAsync(It.IsAny<string>()))
-            .ReturnsAsync(
-                new User() { Email = "test@gmail.com", UserName = "671e4578ed4807a0a203a540" }
-            );
-
-        _authServiceMock.Setup(a => a.CreateAsync(It.IsAny<Auth>())).ReturnsAsync(true);
-
-        _refreshTokenServiceMock
-            .Setup(a =>
-                a.SaveRefreshTokenAsync(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<DateTime>())
-            )
-            .ReturnsAsync(Result<bool>.Success(true));
+        _userManagerMock
+            .Setup(um => um.UpdateAsync(user))
+            .Returns(Task.FromResult(IdentityResult.Success));
 
         // Act
         var result = (ObjectResult)await _authController.Login(validUser);
@@ -99,23 +83,9 @@ public class TestLoginAuthController : TestBase
     {
         // Assign
         UserLogin inValidUser = UserLoginFixture.InValidUser();
-
-        _authServiceMock
-            .Setup(a => a.IsEmailExists(It.IsAny<string>()))
-            .ReturnsAsync(
-                new Auth()
-                {
-                    Email = "test@gmail.com",
-                    PasswordHash = new byte[128 / 8],
-                    PasswordSalt = new byte[128 / 8]
-                }
-            );
-
-        _authServiceMock.Setup(a => a.CreateAsync(It.IsAny<Auth>())).ReturnsAsync(true);
-
-        _usersServiceMock
-            .Setup(u => u.GetUserByEmailAsync(It.IsAny<string>()))
-            .ReturnsAsync(new User());
+        _userManagerMock
+            .Setup(a => a.FindByEmailAsync(It.IsAny<string>()))
+            .ReturnsAsync((ApplicationUser)null!);
 
         // Act
         _authController.ModelState.AddModelError("Email", "Email is required");
@@ -132,14 +102,9 @@ public class TestLoginAuthController : TestBase
     {
         // Assign
         UserLogin validUser = UserLoginFixture.ValidUser();
-
-        _authServiceMock.Setup(a => a.IsEmailExists(It.IsAny<string>())).ReturnsAsync((Auth)null!);
-
-        _authServiceMock.Setup(a => a.CreateAsync(It.IsAny<Auth>())).ReturnsAsync(true);
-
-        _usersServiceMock
-            .Setup(u => u.GetUserByEmailAsync(It.IsAny<string>()))
-            .ReturnsAsync(new User());
+        _userManagerMock
+            .Setup(a => a.FindByEmailAsync(It.IsAny<string>()))
+            .ReturnsAsync((ApplicationUser)null!);
 
         // Act
         var result = (ObjectResult)await _authController.Login(validUser);
@@ -153,24 +118,13 @@ public class TestLoginAuthController : TestBase
     {
         // Assign
         UserLogin validUser = UserLoginFixture.ValidUser();
+        _userManagerMock
+            .Setup(a => a.FindByEmailAsync(It.IsAny<string>()))
+            .ReturnsAsync((ApplicationUser)null!);
 
-        _authServiceMock
-            .Setup(a => a.IsEmailExists(It.IsAny<string>()))
-            .ReturnsAsync(
-                new Auth()
-                {
-                    Email = "test@gmail.com",
-                    PasswordHash = new byte[128 / 8],
-                    PasswordSalt = new byte[128 / 8]
-                }
-            );
-
-        _authServiceMock.Setup(a => a.CreateAsync(It.IsAny<Auth>())).ReturnsAsync(true);
-
-        _usersServiceMock
-            .Setup(u => u.GetUserByEmailAsync(It.IsAny<string>()))
-            .ReturnsAsync(new User());
-
+        _userManagerMock
+            .Setup(a => a.CheckPasswordAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
+            .ReturnsAsync(false);
         // Act
         var result = (ObjectResult)await _authController.Login(validUser);
 
@@ -183,23 +137,9 @@ public class TestLoginAuthController : TestBase
     {
         // Assign
         UserLogin validUser = UserLoginFixture.ValidUser();
-
-        _authServiceMock
-            .Setup(a => a.IsEmailExists(It.IsAny<string>()))
-            .ReturnsAsync(
-                new Auth()
-                {
-                    Email = "test@gmail.com",
-                    PasswordHash = new byte[128 / 8],
-                    PasswordSalt = new byte[128 / 8]
-                }
-            );
-
-        _authServiceMock.Setup(a => a.CreateAsync(It.IsAny<Auth>())).ReturnsAsync(true);
-
-        _usersServiceMock
-            .Setup(u => u.GetUserByEmailAsync(It.IsAny<string>()))
-            .ReturnsAsync((User?)null);
+        _userManagerMock
+            .Setup(a => a.FindByEmailAsync(It.IsAny<string>()))
+            .ReturnsAsync((ApplicationUser)null!);
 
         // Act
         var result = (ObjectResult)await _authController.Login(validUser);
