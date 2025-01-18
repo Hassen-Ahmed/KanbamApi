@@ -2,9 +2,11 @@ using FluentAssertions;
 using Kanbam.Test.UnitTestings.Fixtures;
 using Kanbam.Test.UnitTestings.Reset;
 using KanbamApi.Controllers;
-using KanbamApi.Models;
+using KanbamApi.Core;
 using KanbamApi.Models.AuthModels;
+using KanbamApi.Models.MongoDbIdentity;
 using KanbamApi.Services.Interfaces;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 
@@ -12,25 +14,25 @@ namespace Kanbam.Test.UnitTestings.Controllers;
 
 public class TestRegisterAuthController : TestBase
 {
-    private readonly Mock<IUsersService> _usersServiceMock;
-    private readonly Mock<IAuthService> _authServiceMock;
+    private readonly Mock<UserManager<ApplicationUser>> _userManagerMock;
     private readonly Mock<ITokenService> _tokenServiceMock;
-    private readonly Mock<IRefreshTokenService> _refreshTokenServiceMock;
     private readonly AuthController _authController;
 
     public TestRegisterAuthController()
     {
-        _usersServiceMock = new Mock<IUsersService>();
-        _authServiceMock = new Mock<IAuthService>();
         _tokenServiceMock = new Mock<ITokenService>();
-        _refreshTokenServiceMock = new Mock<IRefreshTokenService>();
-
-        _authController = new AuthController(
-            _usersServiceMock.Object,
-            _authServiceMock.Object,
-            _tokenServiceMock.Object,
-            _refreshTokenServiceMock.Object
+        _userManagerMock = new Mock<UserManager<ApplicationUser>>(
+            new Mock<IUserStore<ApplicationUser>>().Object,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!
         );
+        _authController = new AuthController(_tokenServiceMock.Object, _userManagerMock.Object);
     }
 
     [Fact]
@@ -39,29 +41,20 @@ public class TestRegisterAuthController : TestBase
         // Assign
         UserRegistration validUser = UserRegFixture.ValidUser();
 
-        _authServiceMock
-            .Setup(a => a.IsEmailExists("falsetest@gmail.com"))
-            .ReturnsAsync(
-                new Auth()
-                {
-                    Email = "test@gmail.com",
-                    PasswordHash = new byte[128 / 8],
-                    PasswordSalt = new byte[128 / 8]
-                }
-            );
+        _userManagerMock
+            .Setup(a => a.FindByEmailAsync(It.IsAny<string>()))
+            .ReturnsAsync((ApplicationUser)null!);
 
-        _authServiceMock.Setup(a => a.CreateAsync(It.IsAny<Auth>())).ReturnsAsync(true);
-
-        _usersServiceMock
-            .Setup(u => u.CreateAsync(It.IsAny<User>()))
-            .ReturnsAsync("test9@gmail.com");
+        _userManagerMock
+            .Setup(a => a.CreateAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
+            .Returns(Task.FromResult(IdentityResult.Success));
 
         // Act
         var result = (ObjectResult)await _authController.Register(validUser);
 
         // Asssert
         result.StatusCode.Should().Be(200);
-        result.Value.Should().BeEquivalentTo(new { message = "The registration was successfull!" });
+        result.Value.Should().BeEquivalentTo(new { message = ErrorMessages.SuccessfullRegistered });
     }
 
     [Fact]
@@ -69,13 +62,13 @@ public class TestRegisterAuthController : TestBase
     {
         // Assign
         UserRegistration inValidUser = UserRegFixture.InValidUser();
+        _userManagerMock
+            .Setup(a => a.FindByEmailAsync(It.IsAny<string>()))
+            .ReturnsAsync((ApplicationUser)null!);
 
-        _authServiceMock.Setup(a => a.IsEmailExists(It.IsAny<string>())).ReturnsAsync((Auth)null!);
-        _authServiceMock.Setup(a => a.CreateAsync(It.IsAny<Auth>())).ReturnsAsync(true);
-
-        _usersServiceMock
-            .Setup(u => u.CreateAsync(It.IsAny<User>()))
-            .ReturnsAsync("671e4578ed4807a0a203a540");
+        _userManagerMock
+            .Setup(a => a.CreateAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
+            .Returns(Task.FromResult(IdentityResult.Success));
 
         // Act
         _authController.ModelState.AddModelError("Email", "Email is required");
@@ -92,13 +85,12 @@ public class TestRegisterAuthController : TestBase
     {
         // Assign
         UserRegistration validUser = UserRegFixture.ValidUser();
-
-        _authServiceMock.Setup(a => a.IsEmailExists(It.IsAny<string>())).ReturnsAsync(new Auth());
-        _authServiceMock.Setup(a => a.CreateAsync(It.IsAny<Auth>())).ReturnsAsync(true);
-
-        _usersServiceMock
-            .Setup(u => u.CreateAsync(It.IsAny<User>()))
-            .ReturnsAsync("671e4578ed4807a0a203a540");
+        var user = new ApplicationUser
+        {
+            Email = validUser.Email,
+            UserName = validUser.Email.Split("@").FirstOrDefault()
+        };
+        _userManagerMock.Setup(a => a.FindByEmailAsync(It.IsAny<string>())).ReturnsAsync(user);
 
         // Act
         var result = (ObjectResult)await _authController.Register(validUser);
@@ -112,22 +104,19 @@ public class TestRegisterAuthController : TestBase
     {
         // Assign
         UserRegistration validUser = UserRegFixture.ValidUser();
+        _userManagerMock
+            .Setup(a => a.FindByEmailAsync(It.IsAny<string>()))
+            .ReturnsAsync((ApplicationUser)null!);
 
-        _authServiceMock.Setup(a => a.IsEmailExists("test@gmail.com")).ReturnsAsync((Auth)null!);
-
-        _usersServiceMock
-            .Setup(u => u.CreateAsync(It.IsAny<User>()))
-            .ReturnsAsync("671e4578ed4807a0a203a540");
-
-        _authServiceMock.Setup(a => a.CreateAsync(It.IsAny<Auth>())).ReturnsAsync(false);
-
-        _usersServiceMock.Setup(u => u.CreateAsync(It.IsAny<User>())).ReturnsAsync("something");
+        _userManagerMock
+            .Setup(a => a.CreateAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
+            .Returns(Task.FromResult(IdentityResult.Failed()));
 
         // Act
         var result = (ObjectResult)await _authController.Register(validUser);
 
         // Asssert
         result.StatusCode.Should().Be(500);
-        result.Value.Should().Be("Something wrong with Creating new User!");
+        result.Value?.ToString()?.Contains("Failed to create").Should().BeTrue();
     }
 }
