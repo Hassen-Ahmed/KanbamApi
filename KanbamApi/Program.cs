@@ -1,19 +1,20 @@
 using System.Text;
-using FluentValidation;
+using AspNetCore.Identity.Mongo;
+using KanbamApi.Core;
 using KanbamApi.Data;
 using KanbamApi.Data.Interfaces;
 using KanbamApi.Data.Seed;
 using KanbamApi.Hubs;
-using KanbamApi.Models;
+using KanbamApi.Models.MongoDbIdentity;
 using KanbamApi.Repositories;
 using KanbamApi.Repositories.Interfaces;
 using KanbamApi.Services;
 using KanbamApi.Services.Interfaces;
-using KanbamApi.Util.Generators.SecureData;
-using KanbamApi.Util.Generators.SecureData.Interfaces;
 using KanbamApi.Util.Validators;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
+using MongoDB.Bson;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,14 +37,9 @@ builder.Logging.AddConsole();
 
 builder.Services.AddSingleton<IKanbamDbContext, KanbamDbContext>();
 
-builder.Services.AddScoped<IValidator<RefreshToken>, RefreshTokenValidator>();
 builder.Services.AddTransient<IGeneralValidation, GeneralValidation>();
-builder.Services.AddScoped<IAuthData, AuthData>();
 
 // Repos
-builder.Services.AddScoped<IAuthRepo, AuthRepo>();
-builder.Services.AddScoped<IUsersRepo, UsersRepo>();
-builder.Services.AddScoped<IRefreshTokenRepo, RefreshTokenRepo>();
 builder.Services.AddScoped<IListsRepo, ListsRepo>();
 builder.Services.AddScoped<ICardsRepo, CardsRepo>();
 builder.Services.AddScoped<IBoardsRepo, BoardsRepo>();
@@ -52,10 +48,7 @@ builder.Services.AddScoped<IWorkspacesRepo, WorkspacesRepo>();
 builder.Services.AddScoped<IWorkspaceMembersRepo, WorkspaceMembersRepo>();
 
 // Services
-builder.Services.AddScoped<IUsersService, UsersService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
-builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 builder.Services.AddScoped<ICardsService, CardsService>();
 builder.Services.AddScoped<IListsService, ListsService>();
 builder.Services.AddScoped<IBoardService, BoardService>();
@@ -102,6 +95,31 @@ builder.Services.AddCors(
         );
     }
 );
+
+builder
+    .Services.AddIdentityCore<ApplicationUser>(options =>
+    {
+        options.Password.RequireDigit = false;
+        options.Password.RequiredLength = 8;
+        options.Password.RequireNonAlphanumeric = false;
+        options.Password.RequireUppercase = true;
+        options.Password.RequireLowercase = true;
+        // Lockout
+        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(30);
+        options.Lockout.MaxFailedAccessAttempts = 10;
+
+        options.User.RequireUniqueEmail = true;
+        options.User.AllowedUserNameCharacters =
+            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@.-_";
+    })
+    .AddRoles<ApplicationRole>()
+    .AddMongoDbStores<ApplicationUser, ApplicationRole, ObjectId>(mongo =>
+    {
+        mongo.ConnectionString = DotNetEnv.Env.GetString("CONNECTION_STRING");
+        mongo.UsersCollection = "Users";
+        mongo.RolesCollection = "Roles";
+    })
+    .AddDefaultTokenProviders();
 
 builder
     .Services.AddAuthentication(
@@ -151,6 +169,14 @@ builder
 
 
 var app = builder.Build();
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        context.Response.StatusCode = 500;
+        await context.Response.WriteAsJsonAsync(new { error = ErrorMessages.ServerError });
+    });
+});
 
 // Allow certain browsers
 //   app.Use(async (context, next) =>
@@ -196,7 +222,6 @@ else
 }
 
 app.UseAuthentication();
-
 app.UseAuthorization();
 
 app.MapHub<BoardHub>("/kanbamHubs/boardHub");
