@@ -1,52 +1,43 @@
-using System.Security.Cryptography;
 using KanbamApi.Core;
-using KanbamApi.Models;
 using KanbamApi.Models.AuthModels;
+using KanbamApi.Models.MongoDbIdentity;
 using KanbamApi.Services.Interfaces;
-using KanbamApi.Util;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KanbamApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AuthController : ControllerBase
+public class AuthController(ITokenService _tokenService, UserManager<ApplicationUser> _userManager)
+    : ControllerBase
 {
-    private readonly IUsersService _usersService;
-    private readonly IAuthService _authService;
-    private readonly ITokenService _tokenService;
-    private readonly IRefreshTokenService _refreshTokenService;
-
-    public AuthController(
-        IUsersService usersService,
-        IAuthService authService,
-        ITokenService tokenService,
-        IRefreshTokenService refreshTokenService
-    )
-    {
-        _usersService = usersService;
-        _authService = authService;
-        _tokenService = tokenService;
-        _refreshTokenService = refreshTokenService;
-    }
-
     [HttpPost(ApiRoutesAuth.Register)]
     public async Task<IActionResult> Register([FromBody] UserRegistration userRegistration)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var authDetail = await _authService.IsEmailExists(userRegistration.Email);
+        var authDetail = await _userManager.FindByEmailAsync(userRegistration.Email);
 
         if (authDetail is not null)
-            return BadRequest(new { error = "Email already exists!" });
+            return BadRequest(new { error = ErrorMessages.EmailExists });
 
-        var isDataSaved = await SaveAuthAndUserDetail(userRegistration);
+        ApplicationUser user =
+            new()
+            {
+                Email = userRegistration.Email,
+                UserName = userRegistration.Email?.Split('@').FirstOrDefault()
+            };
+        IdentityResult createUser = await _userManager.CreateAsync(user, userRegistration.Password);
 
-        if (isDataSaved.IsFailure)
-            return StatusCode(isDataSaved.Error.CodeStatus, isDataSaved.Error.Message);
+        if (!createUser.Succeeded)
+            return StatusCode(
+                500,
+                $"Failed to create: {string.Join(", ", createUser.Errors.Select(e => e.Description))}"
+            );
 
-        return Ok(new { message = "The registration was successfull!" });
+        return Ok(new { message = ErrorMessages.SuccessfullRegistered });
     }
 
     [HttpPost(ApiRoutesAuth.Login)]
@@ -56,50 +47,24 @@ public class AuthController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        // check if exists againest database
-        var authEntity = await _authService.IsEmailExists(userLogin.Email);
-
-        if (authEntity is null)
-            return BadRequest(new { error = "Invalid email address." });
-
-        // Check if password is correct by creating hash and salt.
-        byte[] passwordHash = _authService.GeneratePasswordHash(
-            $"{userLogin.Password}",
-            authEntity.PasswordSalt
-        );
-
-        // Validate passwordHash
-        if (!_authService.ValidatePasswordHash(passwordHash, authEntity.PasswordHash))
-            return BadRequest(new { error = "Unauthorized Request!" });
-
-        // Retrieve user details from database
-        var user = await _usersService.GetUserByEmailAsync(userLogin.Email!);
+        // check if exists
+        var user = await _userManager.FindByEmailAsync(userLogin.Email);
 
         if (user is null)
-            return BadRequest(new { error = "User not found." });
+            return BadRequest(new { error = ErrorMessages.InvalidEmail });
 
-        // Generate tokens
-        var claims = _tokenService.GenerateClaims(user.UserName!, user.Id);
+        // Check password match.
+        var isPasswordMatch = await _userManager.CheckPasswordAsync(user!, userLogin.Password);
 
-        var accessToken = _tokenService.GenerateAccessToken(claims);
-        var refreshToken = _tokenService.GenerateRefreshToken();
+        if (!isPasswordMatch)
+            return BadRequest(new { error = ErrorMessages.InvalidPassword });
 
-        var expireDate = DateTime.UtcNow.AddDays((int)TokenExpiration.RefreshTokenDate);
+        var result = await CreateAndUpdateTokens(user);
+        if (result is null)
+            return BadRequest(new { error = ErrorMessages.FailedRefreshTokenUpdate });
 
-        // Save refresh token
-        var isRefreshTokenSaved = await _refreshTokenService.SaveRefreshTokenAsync(
-            user.Id,
-            refreshToken,
-            expireDate
-        );
-
-        if (isRefreshTokenSaved is null || !isRefreshTokenSaved.IsSuccess)
-        {
-            return StatusCode(500, "An unknow error occured");
-        }
-
-        SetRefreshTokenCookie(refreshToken, expireDate);
-        return Ok(new { accessToken });
+        SetRefreshTokenCookie(result.NewRefreshToken, result.ExpiredDate);
+        return Ok(new { accessToken = result.NewAccessToken });
     }
 
     [HttpPost(ApiRoutesAuth.RefreshToken)]
@@ -115,27 +80,30 @@ public class AuthController : ControllerBase
             return BadRequest(new { error = "No refresh token found." });
         }
 
-        // use detail like userId and username from expired accessToken
         if (!Guid.TryParse(refreshTokenFromCookie, out var refreshTokenParsed))
             return Unauthorized(new { error = "Invalid typeof refresh token." });
 
-        // get refreshToken entity from Databases
-        var storedRefreshTokenEntity = await _refreshTokenService.GetRefreshTokensByTokenAsync(
-            refreshTokenParsed
+        var user = _userManager.Users.FirstOrDefault(u => u.RefreshToken == refreshTokenParsed);
+
+        if (user is null)
+            return NotFound();
+
+        // check if RefreshTokenExpiryTime is expired
+        if (user.RefreshTokenExpiryTime is null || user.RefreshTokenExpiryTime < DateTime.UtcNow)
+            return BadRequest(new { error = "Expired RefreshToken" });
+
+        var result = await CreateAndUpdateTokens(user);
+        if (result is null)
+            return BadRequest(new { Message = ErrorMessages.FailedRefreshTokenUpdate });
+
+        SetRefreshTokenCookie(result.NewRefreshToken, user.RefreshTokenExpiryTime);
+        return Ok(
+            new
+            {
+                Message = "The registration was successful!",
+                accessToken = result.NewAccessToken
+            }
         );
-
-        var isDataUpdated = await UpdateRefreshToken(storedRefreshTokenEntity, refreshTokenParsed);
-
-        if (isDataUpdated.IsFailure)
-        {
-            return Unauthorized(new { error = isDataUpdated.Error.Message });
-        }
-
-        SetRefreshTokenCookie(
-            isDataUpdated.Value.NewRefreshToken,
-            storedRefreshTokenEntity.Value?.TokenExpiryTime
-        );
-        return Ok(new { accessToken = isDataUpdated.Value.NewAccessToken });
     }
 
     [HttpPost(ApiRoutesAuth.Revoke)]
@@ -146,10 +114,17 @@ public class AuthController : ControllerBase
             && Guid.TryParse(refreshTokenFromCookie, out var refreshTokenParsed)
         )
         {
-            await _refreshTokenService.DeleteRefreshTokenAsync(refreshTokenParsed);
             Response.Cookies.Delete($"{TokenType.RefreshToken}");
+            var user = _userManager.Users.FirstOrDefault(u => u.RefreshToken == refreshTokenParsed);
 
-            return NoContent();
+            if (user is not null)
+            {
+                user.RefreshToken = new Guid();
+                user.RefreshTokenExpiryTime = null;
+                await _userManager.UpdateAsync(user);
+            }
+
+            return Ok();
         }
 
         return BadRequest(new { error = "Nothing to revoke." });
@@ -170,119 +145,30 @@ public class AuthController : ControllerBase
         );
     }
 
-    private async Task<Result<string>> GenerateUsename(
-        Result<RefreshToken> storedRefreshToken,
-        Guid refreshTokenParsed
-    )
+    private async Task<NewTokens?> CreateAndUpdateTokens(ApplicationUser user)
     {
-        if (
-            storedRefreshToken.IsFailure
-            || storedRefreshToken.Value?.TokenExpiryTime < DateTime.UtcNow
-        )
-        {
-            await _refreshTokenService.DeleteRefreshTokenAsync(refreshTokenParsed);
-            Response.Cookies.Delete($"{TokenType.RefreshToken}");
+        var userIdString = user.Id.ToString();
+        var claims = _tokenService.GenerateClaims(user.UserName!, userIdString);
 
-            Error error = new(401, "Invalid or expired refresh token.");
-            return Result<string>.Failure(error);
-        }
+        // Generate tokens
+        var accessToken = _tokenService.GenerateAccessToken(claims);
+        var refreshToken = _tokenService.GenerateRefreshToken();
+        var expireDate = DateTime.UtcNow.AddDays((int)TokenExpiration.RefreshTokenDate);
 
-        // get username by userId from database
-        var username = await _usersService.GetUsernameByIdAsync(storedRefreshToken.Value?.UserId!);
+        user.RefreshToken = refreshToken;
+        user.RefreshTokenExpiryTime = expireDate;
 
-        if (username is null)
-        {
-            Error error = new(401, "Invalid or expired refresh token.");
-            return Result<string>.Failure(error);
-        }
+        var result = await _userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+            return null;
 
-        return Result<string>.Success(username);
+        return new NewTokens(accessToken, refreshToken, expireDate);
     }
 
-    private async Task<Result<bool>> SaveAuthAndUserDetail(UserRegistration userRegistration)
+    private class NewTokens(string accToken, Guid refToken, DateTime expiredDate)
     {
-        byte[] passwordSalt = new byte[128 / 8];
-        using (var rng = RandomNumberGenerator.Create())
-        {
-            rng.GetNonZeroBytes(passwordSalt);
-        }
-
-        byte[] passwordHash = _authService.GeneratePasswordHash(
-            $"{userRegistration.Password}",
-            passwordSalt
-        );
-
-        Auth authEntity =
-            new()
-            {
-                Email = userRegistration.Email,
-                PasswordHash = passwordHash,
-                PasswordSalt = passwordSalt
-            };
-
-        User newUser =
-            new()
-            {
-                Email = userRegistration.Email,
-                UserName =
-                    $"{userRegistration.Email?.Substring(0, userRegistration.Email.IndexOf('@'))}"
-            };
-
-        var isAuthCreated = await _authService.CreateAsync(authEntity);
-        var isUserCreated = await _usersService.CreateAsync(newUser);
-
-        if (isUserCreated is null || !isAuthCreated)
-        {
-            Error error = new(500, "Something wrong with Creating new User!");
-            return Result<bool>.Failure(error);
-        }
-
-        return Result<bool>.Success(true);
+        public string NewAccessToken { get; } = accToken;
+        public Guid NewRefreshToken { get; } = refToken;
+        public DateTime ExpiredDate { get; } = expiredDate;
     }
-
-    private async Task<Result<NewTokens>> UpdateRefreshToken(
-        Result<RefreshToken> storedRefreshToken,
-        Guid refreshTokenParsed
-    )
-    {
-        var username = await GenerateUsename(storedRefreshToken, refreshTokenParsed);
-
-        if (username.IsFailure)
-        {
-            Error error = new(500, username.Error.Message);
-            return Result<NewTokens>.Failure(error);
-        }
-
-        // Generate token
-        var claims = _tokenService.GenerateClaims(
-            username.Value,
-            storedRefreshToken.Value?.UserId!
-        );
-
-        var newAccessToken = _tokenService.GenerateAccessToken(claims);
-        var newRefreshToken = _tokenService.GenerateRefreshToken();
-
-        // save refreshToken to Databases
-        var isSaved = await _refreshTokenService.UpdateRefreshTokenByIdAsync(
-            storedRefreshToken.Value?.Id!,
-            newRefreshToken
-        );
-
-        if (isSaved.IsFailure)
-        {
-            Error error = new(500, "Unauthorize access.");
-            return Result<NewTokens>.Failure(error);
-        }
-
-        NewTokens newTokens =
-            new() { NewAccessToken = newAccessToken, NewRefreshToken = newRefreshToken };
-
-        return Result<NewTokens>.Success(newTokens);
-    }
-}
-
-public class NewTokens
-{
-    public string NewAccessToken { get; set; } = string.Empty;
-    public Guid NewRefreshToken { get; set; }
 }
