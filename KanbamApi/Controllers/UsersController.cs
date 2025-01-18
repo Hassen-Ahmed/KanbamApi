@@ -1,9 +1,10 @@
 using KanbamApi.Dtos.Update;
-using KanbamApi.Services.Interfaces;
+using KanbamApi.Models.MongoDbIdentity;
 using KanbamApi.Util.Validators;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Bson;
+using MongoDB.Driver.Linq;
 
 namespace KanbamApi.Controllers;
 
@@ -12,17 +13,17 @@ namespace KanbamApi.Controllers;
 [Route("api/[controller]")]
 public class UsersController : ControllerBase
 {
-    private readonly IUsersService _usersService;
+    private readonly UserManager<ApplicationUser> _userManager;
     private readonly ILogger<UsersController> _logger;
     private readonly IGeneralValidation _generalValidation;
 
     public UsersController(
-        IUsersService usersService,
+        UserManager<ApplicationUser> userManager,
         ILogger<UsersController> logger,
         IGeneralValidation generalValidation
     )
     {
-        _usersService = usersService;
+        _userManager = userManager;
         _logger = logger;
         _generalValidation = generalValidation;
     }
@@ -35,7 +36,7 @@ public class UsersController : ControllerBase
         if (passcode != secretKey)
             return StatusCode(400, "Bad request");
 
-        var users = await _usersService.GetAllAsync();
+        var users = await _userManager.Users.ToListAsync();
         return users is not null ? Ok(new { users }) : NotFound();
     }
 
@@ -47,9 +48,8 @@ public class UsersController : ControllerBase
 
         try
         {
-            var res = await _usersService.GetByIdAsync(userId);
-
-            return res is not null ? Ok(new { user = res[0] }) : NotFound();
+            var user = await _userManager.FindByIdAsync(userId);
+            return user is not null ? Ok(new { user = user }) : NotFound();
         }
         catch (Exception ex)
         {
@@ -67,9 +67,15 @@ public class UsersController : ControllerBase
         if (!_generalValidation.IsValidObjectId(userId))
             return BadRequest("Invalid userId.");
 
-        var updated = await _usersService.PatchByIdAsync(userId, updateUser);
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user is null)
+            return NotFound("User not found with this userId!");
 
-        if (!updated)
+        user.UserName = updateUser.UserName;
+        user.Email = updateUser.Email;
+        var updated = await _userManager.UpdateAsync(user);
+
+        if (!updated.Succeeded)
             return NotFound("User not found or nothing to update.");
 
         return NoContent();
