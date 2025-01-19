@@ -52,19 +52,13 @@ jobs:
         run: |
           echo "CONNECTION_STRING=${{secrets.CONNECTION_STRING}}" >> $GITHUB_ENV
           echo "DB_NAME=${{secrets.DB_NAME}}" >> $GITHUB_ENV
-          echo "AUTH_COLLECTION_NAME=${{secrets.AUTH_COLLECTION_NAME}}" >> $GITHUB_ENV
-          echo "USERS_COLLECTION_NAME=${{secrets.USERS_COLLECTION_NAME}}" >> $GITHUB_ENV
-          echo "REFRESH_TOKENS_COLLECTION_NAME=${{secrets.REFRESH_TOKENS_COLLECTION_NAME}}" >> $GITHUB_ENV
           echo "LISTS_COLLECTION_NAME=${{secrets.LISTS_COLLECTION_NAME}}" >> $GITHUB_ENV
           echo "CARDS_COLLECTION_NAME=${{secrets.CARDS_COLLECTION_NAME}}" >> $GITHUB_ENV
-          echo "VISITORS_COLLECTION_NAME=${{secrets.VISITORS_COLLECTION_NAME}}" >> $GITHUB_ENV
           echo "BOARDS_COLLECTION_NAME=${{secrets.BOARDS_COLLECTION_NAME}}" >> $GITHUB_ENV
           echo "BOARDSMEMBERS_COLLECTION_NAME=${{secrets.BOARDSMEMBERS_COLLECTION_NAME}}" >> $GITHUB_ENV
           echo "WORSPACES_COLLECTION_NAME=${{secrets.WORSPACES_COLLECTION_NAME}}" >> $GITHUB_ENV
           echo "WORSPACESMEMBERS_COLLECTION_NAME=${{secrets.WORSPACESMEMBERS_COLLECTION_NAME}}" >> $GITHUB_ENV
           echo "TOKEN_KEY=${{secrets.TOKEN_KEY}}" >> $GITHUB_ENV
-          echo "PASSWORD_KEY=${{secrets.PASSWORD_KEY}}" >> $GITHUB_ENV
-          echo "TOKEN_REFRESH_KEY=${{secrets.TOKEN_REFRESH_KEY}}" >> $GITHUB_ENV
           echo "SECRET_KEY=${{secrets.SECRET_KEY}}" >> $GITHUB_ENV
           echo "VALID_ISSUER=${{secrets.VALID_ISSUER}}" >> $GITHUB_ENV
           echo "VALID_AUDIENCE=${{secrets.VALID_AUDIENCE}}" >> $GITHUB_ENV
