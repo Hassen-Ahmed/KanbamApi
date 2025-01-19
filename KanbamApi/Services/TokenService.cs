@@ -52,37 +52,6 @@ public class TokenService : ITokenService
         return claims;
     }
 
-    // public byte[] GenerateTokenRefreshHash(string tokenRefresh, byte[] tokenRefreshSalt)
-    // {
-    //     if (string.IsNullOrEmpty(tokenRefresh))
-    //     {
-    //         throw new ArgumentException(
-    //             "Token refresh cannot be null or empty.",
-    //             nameof(tokenRefresh)
-    //         );
-    //     }
-
-    //     string passwordSaltPlusTokenRefreshKey =
-    //         DotNetEnv.Env.GetString("TOKEN_REFRESH_KEY") + Convert.ToBase64String(tokenRefreshSalt);
-
-    //     if (string.IsNullOrWhiteSpace(passwordSaltPlusTokenRefreshKey))
-    //     {
-    //         throw new InvalidOperationException(
-    //             "TOKEN_REFRESH_KEY is not set in the environment variables."
-    //         );
-    //     }
-
-    //     byte[] tokenRefreshHash = KeyDerivation.Pbkdf2(
-    //         password: $"{tokenRefresh}",
-    //         salt: Encoding.UTF8.GetBytes(passwordSaltPlusTokenRefreshKey),
-    //         prf: KeyDerivationPrf.HMACSHA256,
-    //         iterationCount: 100000,
-    //         numBytesRequested: 256 / 8
-    //     );
-
-    //     return tokenRefreshHash;
-    // }
-
     public ClaimsPrincipal DecodeExpiredToken(string expiredToken)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
