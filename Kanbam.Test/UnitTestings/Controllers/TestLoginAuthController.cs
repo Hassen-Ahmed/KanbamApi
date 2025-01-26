@@ -35,7 +35,11 @@ public class TestLoginAuthController : TestBase
             null!,
             null!
         );
-        _authController = new AuthController(_tokenServiceMock.Object, _userManagerMock.Object);
+        _authController = new AuthController(
+            _userManagerMock.Object,
+            _tokenServiceMock.Object,
+            null!
+        );
 
         _mockHttpContext = new Mock<HttpContext>();
         _mockHttpResponse = new Mock<HttpResponse>();

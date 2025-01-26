@@ -32,7 +32,11 @@ public class TestRegisterAuthController : TestBase
             null!,
             null!
         );
-        _authController = new AuthController(_tokenServiceMock.Object, _userManagerMock.Object);
+        _authController = new AuthController(
+            _userManagerMock.Object,
+            _tokenServiceMock.Object,
+            null!
+        );
     }
 
     [Fact]

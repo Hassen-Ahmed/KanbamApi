@@ -63,6 +63,17 @@ jobs:
           echo "VALID_ISSUER=${{secrets.VALID_ISSUER}}" >> $GITHUB_ENV
           echo "VALID_AUDIENCE=${{secrets.VALID_AUDIENCE}}" >> $GITHUB_ENV
 
+          echo "SENDGRID_API_KEY=${{secrets.SENDGRID_API_KEY}}" >> $GITHUB_ENV
+          echo "SENDGRID_FROM_EMAIL=${{secrets.SENDGRID_FROM_EMAIL}}" >> $GITHUB_ENV
+          echo "SENDGRID_FROM_NAME=${{secrets.SENDGRID_FROM_NAME}}" >> $GITHUB_ENV
+
+          echo "SMTP_USERNAME=${{secrets.SMTP_USERNAME}}" >> $GITHUB_ENV
+          echo "SMTP_PASSWORD=${{secrets.SMTP_PASSWORD}}" >> $GITHUB_ENV
+          echo "SMTP_PORT=${{secrets.SMTP_PORT}}" >> $GITHUB_ENV
+          echo "SMTP_HOST=${{secrets.SMTP_HOST}}" >> $GITHUB_ENV
+
+          echo "DOMAIN_NAME_PW=${{secrets.DOMAIN_NAME_PW}}" >> $GITHUB_ENV
+
       - name: Run Tests
         working-directory: Kanbam.Test
         run: dotnet test --verbosity normal
