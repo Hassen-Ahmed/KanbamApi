@@ -1,7 +1,10 @@
 using KanbamApi.Core;
+using KanbamApi.Models;
 using KanbamApi.Models.AuthModels;
 using KanbamApi.Models.MongoDbIdentity;
 using KanbamApi.Services.Interfaces;
+using KanbamApi.Services.Interfaces.Email;
+using KanbamApi.Util;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,12 +12,27 @@ namespace KanbamApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AuthController(ITokenService _tokenService, UserManager<ApplicationUser> _userManager)
-    : ControllerBase
+public class AuthController : ControllerBase
 {
+    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly ITokenService _tokenService;
+    private readonly IEmailService _emailService;
+
+    public AuthController(
+        UserManager<ApplicationUser> userManager,
+        ITokenService tokenService,
+        IEmailService emailService
+    )
+    {
+        _userManager = userManager;
+        _tokenService = tokenService;
+        _emailService = emailService;
+    }
+
     [HttpPost(ApiRoutesAuth.Register)]
     public async Task<IActionResult> Register([FromBody] UserRegistration userRegistration)
     {
+        // validate userRegistration
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
@@ -43,7 +61,7 @@ public class AuthController(ITokenService _tokenService, UserManager<Application
     [HttpPost(ApiRoutesAuth.Login)]
     public async Task<IActionResult> Login([FromBody] UserLogin userLogin)
     {
-        // validation
+        // validate userLogin
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
@@ -130,6 +148,55 @@ public class AuthController(ITokenService _tokenService, UserManager<Application
         return BadRequest(new { error = "Nothing to revoke." });
     }
 
+    [HttpPost(ApiRoutesAuth.ForgotPassword)]
+    public async Task<IActionResult> ForgotPassword(
+        [FromBody] ForgotPasswordDetail forgotPasswordDetail
+    )
+    {
+        // validate forgotPasswordDetail
+        if (!ModelState.IsValid)
+            return Ok(ModelState);
+
+        // check if exists
+        var user = await _userManager.FindByEmailAsync(forgotPasswordDetail.Email);
+        if (user is null)
+            return Ok(new { error = ErrorMessages.InvalidEmail });
+
+        // generate token
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+        // send email
+        await SendResetEmail(token, forgotPasswordDetail.Email);
+        return Ok(new { message = $"Email sent.", email = $"{forgotPasswordDetail.Email}" });
+    }
+
+    [HttpPost(ApiRoutesAuth.ResetPassword)]
+    public async Task<IActionResult> ResetPassword(
+        [FromBody] ResetPasswordDetail resetPasswordDetail
+    )
+    {
+        // validate the resetPasswordDetail
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        // check if exists
+        var user = await _userManager.FindByEmailAsync(resetPasswordDetail.Email);
+        if (user is null)
+            return BadRequest(new { error = ErrorMessages.InvalidEmail });
+
+        // Reset password with newPassword
+        var result = await _userManager.ResetPasswordAsync(
+            user,
+            resetPasswordDetail.Token,
+            resetPasswordDetail.NewPassword
+        );
+
+        if (!result.Succeeded)
+            return BadRequest(new { Message = "The token is invalid or has expired." });
+
+        return Ok(new { message = "Password reset successfully." });
+    }
+
     private void SetRefreshTokenCookie(Guid refreshToken, DateTime? expirationDate)
     {
         Response.Cookies.Append(
@@ -170,5 +237,22 @@ public class AuthController(ITokenService _tokenService, UserManager<Application
         public string NewAccessToken { get; } = accToken;
         public Guid NewRefreshToken { get; } = refToken;
         public DateTime ExpiredDate { get; } = expiredDate;
+    }
+
+    private async Task<bool> SendResetEmail(string token, string email)
+    {
+        // Some special chars must be encode and then decode later from FrontEnd side.
+        var encodedResetToken = Uri.EscapeDataString(token);
+        var encodedResetEmail = Uri.EscapeDataString(email);
+        var domainName = DotNetEnv.Env.GetString("DOMAIN_NAME_PW");
+        var frontEndUrl =
+            $"{domainName}/auth/reset-password?resetToken={encodedResetToken}&email={encodedResetEmail}";
+
+        var body = ConstantData.GenerateHTMLContent(email, frontEndUrl);
+
+        EmailRequest emailToSend = new(email, "Only for testing purpose.", body);
+        var sendEmail = await _emailService?.SendEmailAsync(emailToSend)!;
+
+        return true;
     }
 }
