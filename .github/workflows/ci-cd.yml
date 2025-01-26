@@ -69,7 +69,9 @@ jobs:
 
           echo "SMTP_USERNAME=${{secrets.SMTP_USERNAME}}" >> $GITHUB_ENV
           echo "SMTP_PASSWORD=${{secrets.SMTP_PASSWORD}}" >> $GITHUB_ENV
-          echo "SMSMTP_PORTP_PASSWORD=${{secrets.SMTP_PORT}}" >> $GITHUB_ENV
+          echo "SMTP_PORT=${{secrets.SMTP_PORT}}" >> $GITHUB_ENV
+          echo "SMTP_HOST=${{secrets.SMTP_HOST}}" >> $GITHUB_ENV
+
           echo "DOMAIN_NAME_PW=${{secrets.DOMAIN_NAME_PW}}" >> $GITHUB_ENV
 
       - name: Run Tests
