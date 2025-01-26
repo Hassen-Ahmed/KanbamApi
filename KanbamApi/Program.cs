@@ -5,11 +5,14 @@ using KanbamApi.Data;
 using KanbamApi.Data.Interfaces;
 using KanbamApi.Data.Seed;
 using KanbamApi.Hubs;
+using KanbamApi.Models;
 using KanbamApi.Models.MongoDbIdentity;
 using KanbamApi.Repositories;
 using KanbamApi.Repositories.Interfaces;
 using KanbamApi.Services;
+using KanbamApi.Services.Email;
 using KanbamApi.Services.Interfaces;
+using KanbamApi.Services.Interfaces.Email;
 using KanbamApi.Util.Validators;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -55,6 +58,12 @@ builder.Services.AddScoped<IBoardService, BoardService>();
 builder.Services.AddScoped<IBoardMemberService, BoardMemberService>();
 builder.Services.AddScoped<IWorkspaceService, WorkspaceService>();
 builder.Services.AddScoped<IWorkspaceMemberService, WorkspaceMemberService>();
+
+// Email service
+builder.Services.AddTransient<SmtpEmailService>();
+builder.Services.AddTransient<SendGridEmailService>();
+builder.Services.AddTransient<IEmailService, FallbackEmailService>();
+builder.Services.AddSingleton<IEmailServiceFactory, EmailServiceFactory>();
 
 // Seeding for testing
 builder.Services.AddScoped<IMongoDbSeeder, MongoDbSeeder>();
@@ -103,7 +112,7 @@ builder
         options.Password.RequiredLength = 8;
         options.Password.RequireNonAlphanumeric = false;
         options.Password.RequireUppercase = true;
-        options.Password.RequireLowercase = false;
+        options.Password.RequireLowercase = true;
         // Lockout
         options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(30);
         options.Lockout.MaxFailedAccessAttempts = 10;
@@ -120,6 +129,11 @@ builder
         mongo.RolesCollection = "Roles";
     })
     .AddDefaultTokenProviders();
+
+builder.Services.Configure<DataProtectionTokenProviderOptions>(opt =>
+{
+    opt.TokenLifespan = TimeSpan.FromMinutes(30);
+});
 
 builder
     .Services.AddAuthentication(
