@@ -10,6 +10,8 @@
 - **Drag-and-Drop Functionality**: Update task status intuitively.
 - **Collaborative Environment**: Share boards with teammates and assign tasks.
 - **Data Visualization**: Leverage charts to analyze project progress.
+- **LogIn and SignUp**: Users can create their own environment by signup and loging.
+- **Reset Password**: If users lost their passwrod they can reset their password by utilizing this functionality.
 - **Scalable Architecture**: Supports both small teams and mid-level projects.
 
 ---
@@ -29,6 +31,7 @@
 - **Nivo**: Visual representation of project data.
 - **styled-components**: Theme management and styling.
 - **SignalR**: Real-time, two-way communication between the client and server facilitates live streaming and streamlines collaborative tasks or project management for users.
+- **Gemini AI**: Used to generate user preference themes for the app.
 
 ### Setup Instructions
 
@@ -71,6 +74,9 @@
 - **SignalR**: Real-time, two-way communication between the client and server facilitates live streaming and streamlines collaborative tasks or project management for users..
 - **Bogus**: Used to generate testing data.
 - **DotNetEnv**: Effortlessly store and retrieve sensitive data.
+- **Asp.net core Identity with MongoDB Identity**: Used for Authentication and other user management.
+- **MailKit**: Used to send links to reset users password via their email address as primary option.
+- **SendGrid**: Used to send links to reset users password via their email address as a secondary option.
 
 ### Others
 
@@ -101,6 +107,8 @@
   - `POST /api/Auth/register`: User registration.
   - `POST /api/Auth/RefrshToken`: To retate refreshToken and accessToken.
   - `POST /api/Auth/RevokeRefrshToken`: To delete refreshToken from Cookie and database.
+  - `POST /api/Auth/ForgotPassword`: To send a link to reset their password to users email address.
+  - `POST /api/Auth/ResetPassword`: To reset users password.
 - **Workspaces**:
   - `GET /api/Workspaces`: Fetch all workspaces.
   - `POST /api/Workspaces`: Create a new workspaces.
@@ -176,6 +184,17 @@ SECRET_KEY=...
 
 VALID_ISSUER=...
 VALID_AUDIENCE=...
+
+SENDGRID_API_KEY=...
+SENDGRID_FROM_EMAIL=...
+SENDGRID_FROM_NAME=...
+
+SMTP_USERNAME=...
+SMTP_PASSWORD=...
+SMTP_PORT=...
+SMTP_HOST=...
+
+DOMAIN_NAME_PW=...
 ```
 
 ---
