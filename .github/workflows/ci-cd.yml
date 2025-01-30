@@ -74,6 +74,8 @@ jobs:
 
           echo "DOMAIN_NAME_PW=${{secrets.DOMAIN_NAME_PW}}" >> $GITHUB_ENV
 
+          echo "GOOGLE_CLIENT_ID=${{secrets.GOOGLE_CLIENT_ID}}" >> $GITHUB_ENV
+
       - name: Run Tests
         working-directory: Kanbam.Test
         run: dotnet test --verbosity normal
