@@ -11,6 +11,7 @@
     <PackageReference Include="Bogus" Version="35.5.1" />
     <PackageReference Include="DotNetEnv" Version="3.0.0" />
     <PackageReference Include="FluentValidation" Version="11.9.1" />
+    <PackageReference Include="Google.Apis.Auth" Version="1.69.0" />
     <PackageReference Include="MailKit" Version="4.9.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.4" />
     <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.3.0" />
