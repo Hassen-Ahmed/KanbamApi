@@ -215,11 +215,7 @@ public class AuthController : ControllerBase
             if (user == null)
             {
                 // Create a new user if they don’t exist
-                user = new ApplicationUser
-                {
-                    UserName = $"{payload.Name.Split(" ").FirstOrDefault()}",
-                    Email = payload.Email,
-                };
+                user = new ApplicationUser { UserName = payload.Email, Email = payload.Email, };
 
                 var creatingResult = await _userManager.CreateAsync(user);
 
