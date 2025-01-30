@@ -5,7 +5,6 @@ using KanbamApi.Data;
 using KanbamApi.Data.Interfaces;
 using KanbamApi.Data.Seed;
 using KanbamApi.Hubs;
-using KanbamApi.Models;
 using KanbamApi.Models.MongoDbIdentity;
 using KanbamApi.Repositories;
 using KanbamApi.Repositories.Interfaces;
@@ -21,6 +20,7 @@ using MongoDB.Bson;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// build environment path
 var env = builder.Environment.EnvironmentName.ToLower();
 
 if (env == "test" || env == "development")
@@ -39,7 +39,6 @@ builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 
 builder.Services.AddSingleton<IKanbamDbContext, KanbamDbContext>();
-
 builder.Services.AddTransient<IGeneralValidation, GeneralValidation>();
 
 // Repos
@@ -72,6 +71,7 @@ builder.Services.AddScoped<IMongoDbSeeder, MongoDbSeeder>();
 builder.Services.AddControllers();
 builder.Services.AddSignalR();
 
+// cors service section
 builder.Services.AddCors(
     (options) =>
     {
@@ -105,6 +105,7 @@ builder.Services.AddCors(
     }
 );
 
+// Identity service
 builder
     .Services.AddIdentityCore<ApplicationUser>(options =>
     {
@@ -128,6 +129,7 @@ builder
         mongo.UsersCollection = "Users";
         mongo.RolesCollection = "Roles";
     })
+    .AddSignInManager()
     .AddDefaultTokenProviders();
 
 builder.Services.Configure<DataProtectionTokenProviderOptions>(opt =>
@@ -135,6 +137,7 @@ builder.Services.Configure<DataProtectionTokenProviderOptions>(opt =>
     opt.TokenLifespan = TimeSpan.FromMinutes(30);
 });
 
+// Authentication service
 builder
     .Services.AddAuthentication(
         (options) =>
@@ -176,12 +179,7 @@ builder
         };
     });
 
-// if(OperatingSystem.IsWindows()) {
-//     builder.Services.AddDataProtection().ProtectKeysWithDpapi();
-// }
-
-
-
+// build app
 var app = builder.Build();
 app.UseExceptionHandler(errorApp =>
 {
@@ -192,39 +190,9 @@ app.UseExceptionHandler(errorApp =>
     });
 });
 
-// Allow certain browsers
-//   app.Use(async (context, next) =>
-//     {
-//         string userAgent = context.Request.Headers["User-Agent"].ToString();
-//         // Check if user-agent contains Chrome, Firefox or Safari
-//         if (userAgent.Contains("Chrome") || userAgent.Contains("Firefox") || userAgent.Contains("Safari"))
-//         {
-//             // Allow request to proceed
-//             await next();
-//         }
-//         else
-//         {
-//             // Forbidden
-//             context.Response.StatusCode = 403;
-//         }
-//     });
-
-// Add Content Security Policy (CSP)
-// app.Use(
-//     async (context, next) =>
-//     {
-//         context.Response.Headers.Append("Content-Security-Policy", "default-src 'self'");
-//         await next();
-//     }
-// );
-
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    // IKanbamDbContext kanbamDbContext = new KanbamDbContext();
-    // MongoDbSeeder mongoDbSeeder = new(kanbamDbContext);
-    // mongoDbSeeder.SeedAsync().Wait();
-
     app.UseCors("DevCors");
     app.UseSwagger();
     app.UseSwaggerUI();
