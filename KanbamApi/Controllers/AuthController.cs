@@ -1,5 +1,5 @@
+using Google.Apis.Auth;
 using KanbamApi.Core;
-using KanbamApi.Models;
 using KanbamApi.Models.AuthModels;
 using KanbamApi.Models.MongoDbIdentity;
 using KanbamApi.Services.Interfaces;
@@ -197,6 +197,54 @@ public class AuthController : ControllerBase
         return Ok(new { message = "Password reset successfully." });
     }
 
+    [HttpPost("google-login")]
+    public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginModel model)
+    {
+        var settings = new GoogleJsonWebSignature.ValidationSettings()
+        {
+            Audience = [DotNetEnv.Env.GetString("GOOGLE_CLIENT_ID")]
+        };
+        try
+        {
+            // Validate the Google ID token
+            var payload = await GoogleJsonWebSignature.ValidateAsync(model.Token, settings);
+            var name = payload.Name;
+
+            // Check if the user exists in my database
+            var user = await _userManager.FindByEmailAsync(payload.Email);
+            if (user == null)
+            {
+                // Create a new user if they don’t exist
+                user = new ApplicationUser
+                {
+                    UserName = $"{payload.Name.Split(" ").FirstOrDefault()}",
+                    Email = payload.Email,
+                };
+
+                var creatingResult = await _userManager.CreateAsync(user);
+
+                if (!creatingResult.Succeeded)
+                    return StatusCode(
+                        500,
+                        $"Failed to create: {string.Join(", ", creatingResult.Errors.Select(e => e.Description))}"
+                    );
+            }
+
+            // Generate and return a JWT access and refresh token, and also update user detail
+            var result = await CreateAndUpdateTokens(user);
+            if (result is null)
+                return BadRequest(new { error = ErrorMessages.FailedRefreshTokenUpdate });
+
+            SetRefreshTokenCookie(result.NewRefreshToken, result.ExpiredDate);
+            return Ok(new { accessToken = result.NewAccessToken });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = "Invalid Google token.", details = ex.Message });
+        }
+    }
+
+    /// Helpers
     private void SetRefreshTokenCookie(Guid refreshToken, DateTime? expirationDate)
     {
         Response.Cookies.Append(
