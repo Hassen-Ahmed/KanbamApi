@@ -58,6 +58,8 @@ jobs:
           echo "BOARDSMEMBERS_COLLECTION_NAME=${{secrets.BOARDSMEMBERS_COLLECTION_NAME}}" >> $GITHUB_ENV
           echo "WORSPACES_COLLECTION_NAME=${{secrets.WORSPACES_COLLECTION_NAME}}" >> $GITHUB_ENV
           echo "WORSPACESMEMBERS_COLLECTION_NAME=${{secrets.WORSPACESMEMBERS_COLLECTION_NAME}}" >> $GITHUB_ENV
+          echo "DONATIONS_COLLECTION_NAME=${{secrets.DONATIONS_COLLECTION_NAME}}" >> $GITHUB_ENV
+         
           echo "TOKEN_KEY=${{secrets.TOKEN_KEY}}" >> $GITHUB_ENV
           echo "SECRET_KEY=${{secrets.SECRET_KEY}}" >> $GITHUB_ENV
           echo "VALID_ISSUER=${{secrets.VALID_ISSUER}}" >> $GITHUB_ENV
@@ -72,9 +74,12 @@ jobs:
           echo "SMTP_PORT=${{secrets.SMTP_PORT}}" >> $GITHUB_ENV
           echo "SMTP_HOST=${{secrets.SMTP_HOST}}" >> $GITHUB_ENV
 
-          echo "DOMAIN_NAME_PW=${{secrets.DOMAIN_NAME_PW}}" >> $GITHUB_ENV
+          echo "FRONT_END_DOMAIN=${{secrets.FRONT_END_DOMAIN}}" >> $GITHUB_ENV
 
           echo "GOOGLE_CLIENT_ID=${{secrets.GOOGLE_CLIENT_ID}}" >> $GITHUB_ENV
+
+          echo "STRIPE_SECRET_KEY=${{secrets.STRIPE_SECRET_KEY}}" >> $GITHUB_ENV
+          echo "STRIPE_WEBHOOK_SECRET_KEY=${{secrets.STRIPE_WEBHOOK_SECRET_KEY}}" >> $GITHUB_ENV
 
       - name: Run Tests
         working-directory: Kanbam.Test

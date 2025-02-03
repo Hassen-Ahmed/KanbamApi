@@ -288,7 +288,7 @@ public class AuthController : ControllerBase
         // Some special chars must be encode and then decode later from FrontEnd side.
         var encodedResetToken = Uri.EscapeDataString(token);
         var encodedResetEmail = Uri.EscapeDataString(email);
-        var domainName = DotNetEnv.Env.GetString("DOMAIN_NAME_PW");
+        var domainName = DotNetEnv.Env.GetString("FRONT_END_DOMAIN");
         var frontEndUrl =
             $"{domainName}/auth/reset-password?resetToken={encodedResetToken}&email={encodedResetEmail}";
 

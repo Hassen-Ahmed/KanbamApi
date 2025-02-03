@@ -11,6 +11,7 @@ public interface IKanbamDbContext
     IMongoCollection<BoardMember> BoardMembersCollection { get; }
     IMongoCollection<Workspace> WorkspacesCollection { get; }
     IMongoCollection<WorkspaceMember> WorkspaceMembersCollection { get; }
+    IMongoCollection<Donation> DonationsCollection { get; }
     IMongoDatabase KanbamDatabase { get; }
     IMongoClient MongoClient { get; }
 }

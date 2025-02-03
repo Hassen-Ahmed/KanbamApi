@@ -12,6 +12,7 @@ public class KanbamDbContext : IKanbamDbContext
     private readonly IMongoCollection<BoardMember> _boardMembersCollection;
     private readonly IMongoCollection<Workspace> _workspacesCollection;
     private readonly IMongoCollection<WorkspaceMember> _workspaceMembersCollection;
+    private readonly IMongoCollection<Donation> _donationsCollection;
     private readonly IMongoDatabase _kanbamDatabase;
     private readonly IMongoClient _mongoClient;
 
@@ -43,6 +44,9 @@ public class KanbamDbContext : IKanbamDbContext
         _workspaceMembersCollection = kanbamDatabase.GetCollection<WorkspaceMember>(
             DotNetEnv.Env.GetString("WORSPACESMEMBERS_COLLECTION_NAME")
         );
+        _donationsCollection = kanbamDatabase.GetCollection<Donation>(
+            DotNetEnv.Env.GetString("DONATIONS_COLLECTION_NAME")
+        );
     }
 
     public IMongoCollection<Card> CardsCollection => _cardsCollection;
@@ -52,6 +56,7 @@ public class KanbamDbContext : IKanbamDbContext
     public IMongoCollection<Workspace> WorkspacesCollection => _workspacesCollection;
     public IMongoCollection<WorkspaceMember> WorkspaceMembersCollection =>
         _workspaceMembersCollection;
+    public IMongoCollection<Donation> DonationsCollection => _donationsCollection;
     public IMongoDatabase KanbamDatabase => _kanbamDatabase;
     public IMongoClient MongoClient => _mongoClient;
 }
