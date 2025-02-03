@@ -80,11 +80,7 @@ builder.Services.AddCors(
             (corsBuilder) =>
             {
                 corsBuilder
-                    .WithOrigins(
-                        "http://localhost:5173",
-                        "http://localhost:3000",
-                        "http://localhost:8000"
-                    )
+                    .WithOrigins("http://localhost:5173")
                     .AllowAnyMethod()
                     .AllowAnyHeader()
                     .AllowCredentials();
@@ -190,7 +186,9 @@ app.UseExceptionHandler(errorApp =>
     });
 });
 
-// Configure the HTTP request pipeline.
+// Set stripe secret key for payment here to minimize the number of times it is configured
+Stripe.StripeConfiguration.ApiKey = DotNetEnv.Env.GetString("STRIPE_SECRET_KEY");
+
 if (app.Environment.IsDevelopment())
 {
     app.UseCors("DevCors");
