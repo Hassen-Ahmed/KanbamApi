@@ -292,7 +292,7 @@ public class AuthController : ControllerBase
         var frontEndUrl =
             $"{domainName}/auth/reset-password?resetToken={encodedResetToken}&email={encodedResetEmail}";
 
-        var body = ConstantData.GenerateHTMLContent(email, frontEndUrl);
+        var body = EmailTemplateService.GeneratePasswordResetHTMLContent(email, frontEndUrl);
 
         EmailRequest emailToSend = new(email, "Only for testing purpose.", body);
         var sendEmail = await _emailService?.SendEmailAsync(emailToSend)!;

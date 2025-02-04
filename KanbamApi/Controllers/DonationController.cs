@@ -3,6 +3,7 @@ using KanbamApi.Models;
 using KanbamApi.Models.AuthModels;
 using KanbamApi.Models.MongoDbIdentity;
 using KanbamApi.Services.Interfaces.Email;
+using KanbamApi.Util;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -128,12 +129,13 @@ public class PaymentController : ControllerBase
 
                     if (user is not null)
                     {
+                        var body = EmailTemplateService.GenerateDonnerHTMLContent(
+                            session.CustomerDetails.Email,
+                            (int)(session.AmountTotal / 100.0)!
+                        );
+
                         EmailRequest emailToSend =
-                            new(
-                                session.CustomerDetails.Email,
-                                "Thank-You Email! 💖",
-                                "<p>Thanks for your support! 💖</p>"
-                            );
+                            new(session.CustomerDetails.Email, "Thank-You Email! 💖", body);
 
                         await _emailService?.SendEmailAsync(emailToSend)!;
                         _logger.LogInformation(
