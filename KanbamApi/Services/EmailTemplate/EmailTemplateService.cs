@@ -2,21 +2,23 @@ namespace KanbamApi.Util;
 
 public class EmailTemplateService
 {
-    public static string LoadEmailTemplate(string filePath)
+    private static string LoadEmailTemplate(string fileName)
     {
-        return File.ReadAllText(filePath);
+        string templatePath = Path.Combine(
+            Directory.GetCurrentDirectory(),
+            "wwwroot",
+            "templates",
+            fileName
+        );
+        string template = File.ReadAllText(templatePath);
+        return template;
     }
 
     public static string GenerateDonnerHTMLContent(string email, int amount)
     {
         var firstName = email.Contains("@") ? email.Split('@')[0] : "Supporter";
-        string templatePath = Path.Combine(
-            Directory.GetCurrentDirectory(),
-            "wwwroot",
-            "templates",
-            "donation-email.html"
-        );
-        string template = File.ReadAllText(templatePath);
+
+        var template = LoadEmailTemplate("donation-email.html");
         return template
             .Replace("{{FirstName}}", firstName)
             .Replace("{{Amount}}", $"{amount}")
@@ -25,17 +27,7 @@ public class EmailTemplateService
 
     public static string GeneratePasswordResetHTMLContent(string email, string link)
     {
-        var firstName = email.Contains("@") ? email.Split('@')[0] : "Supporter";
-        string templatePath = Path.Combine(
-            Directory.GetCurrentDirectory(),
-            "wwwroot",
-            "templates",
-            "reset-password.html"
-        );
-        string template = File.ReadAllText(templatePath);
-        return template
-            .Replace("{{Email}}", email)
-            .Replace("{{Link}}", link)
-            .Replace("{{Date}}", DateTime.UtcNow.ToString("dd MMM yyyy"));
+        var template = LoadEmailTemplate("reset-password.html");
+        return template.Replace("{{Email}}", email).Replace("{{Link}}", link);
     }
 }
