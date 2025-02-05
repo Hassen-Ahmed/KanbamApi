@@ -7,11 +7,13 @@ using KanbamApi.Services.Interfaces.Email;
 using KanbamApi.Util;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace KanbamApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[EnableRateLimiting("SlidingWindowStrictPolicy")]
 public class AuthController : ControllerBase
 {
     private readonly UserManager<ApplicationUser> _userManager;
@@ -86,6 +88,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost(ApiRoutesAuth.RefreshToken)]
+    [EnableRateLimiting("FixedWindow")]
     public async Task<IActionResult> RefreshToken()
     {
         if (
