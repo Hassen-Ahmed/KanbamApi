@@ -4,6 +4,7 @@ using KanbamApi.Services.Interfaces;
 using KanbamApi.Util.Validators;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using MongoDB.Bson;
 
 namespace KanbamApi.Controllers;
@@ -11,6 +12,7 @@ namespace KanbamApi.Controllers;
 [Authorize]
 [ApiController]
 [Route("api/[controller]")]
+[EnableRateLimiting("FixedWindow")]
 public class BoardsMembersController : ControllerBase
 {
     private readonly IBoardMemberService _boardMemberService;

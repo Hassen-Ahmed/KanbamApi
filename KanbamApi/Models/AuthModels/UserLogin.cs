@@ -16,7 +16,7 @@ public class UserLogin
     [Required(ErrorMessage = "Password is required")]
     [RegularExpression(
         @"^(?=.*[0-9])(?=.*[a-zA-Z])(?=.*[#$@!%&*?])[A-Za-z0-9#$@!%&*?]{8,20}$",
-        ErrorMessage = "assword must be 8–20 characters long and include at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character."
+        ErrorMessage = "Password must be 8–20 characters long and include at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character."
     )]
     [BsonElement("Password")]
     public string Password { get; set; } = string.Empty;

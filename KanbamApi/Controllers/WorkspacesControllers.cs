@@ -5,12 +5,14 @@ using KanbamApi.Services.Interfaces;
 using KanbamApi.Util.Validators;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace KanbamApi.Controllers;
 
 [Authorize]
 [ApiController]
 [Route("api/[controller]")]
+[EnableRateLimiting("FixedWindow")]
 public class WorkspacesController : ControllerBase
 {
     private readonly IWorkspaceService _workspaceService;

@@ -4,13 +4,14 @@ using KanbamApi.Services.Interfaces;
 using KanbamApi.Util.Validators;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Bson;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace KanbamApi.Controllers;
 
 [Authorize]
 [ApiController]
 [Route("api/[controller]")]
+[EnableRateLimiting("FixedWindow")]
 public class WorkspacesMembersController : ControllerBase
 {
     private readonly IWorkspaceMemberService _workspaceMemberService;

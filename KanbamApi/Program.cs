@@ -1,4 +1,6 @@
+using System.Collections.Concurrent;
 using System.Text;
+using System.Threading.RateLimiting;
 using AspNetCore.Identity.Mongo;
 using KanbamApi.Core;
 using KanbamApi.Data;
@@ -15,6 +17,7 @@ using KanbamApi.Services.Interfaces.Email;
 using KanbamApi.Util.Validators;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Bson;
 
@@ -175,8 +178,86 @@ builder
         };
     });
 
+// Thread Safety for rate limiting service (SlidingWindowStrictPolicy)
+var violationTracker = new ConcurrentDictionary<string, double>();
+
+// Rate limiting services
+builder.Services.AddRateLimiter(opts =>
+{
+    opts.AddFixedWindowLimiter(
+        "FixedWindow",
+        limiterOptions =>
+        {
+            limiterOptions.PermitLimit = 100;
+            limiterOptions.Window = TimeSpan.FromMinutes(1);
+            limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+            limiterOptions.QueueLimit = 0;
+        }
+    );
+
+    opts.AddPolicy(
+        "SlidingWindowStrictPolicy",
+        context =>
+        {
+            // I am using the user id as the partition key, instead of the IP address if user is authenticated
+            var clientId =
+                context.User.Identity?.IsAuthenticated == true
+                    ? context.User.FindFirst("userId")?.Value
+                    : context.Connection.RemoteIpAddress?.ToString();
+
+            var violations = violationTracker.GetOrAdd(clientId!, 0);
+            var dynamicWindow = TimeSpan.FromMinutes(1 + Math.Ceiling(violations));
+
+            return RateLimitPartition.GetSlidingWindowLimiter(
+                clientId,
+                _ =>
+                    new()
+                    {
+                        PermitLimit = 5,
+                        SegmentsPerWindow = 2,
+                        Window = dynamicWindow,
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        QueueLimit = 0,
+                    }
+            );
+        }
+    );
+
+    opts.OnRejected = (context, _) =>
+    {
+        var clientId =
+            context.HttpContext.User.Identity?.IsAuthenticated == true
+                ? context.HttpContext.User.FindFirst("userId")?.Value
+                : context.HttpContext.Connection.RemoteIpAddress?.ToString();
+
+        if (clientId != null)
+        {
+            // Increment violation count
+            violationTracker.AddOrUpdate(clientId, 0.2, (_, count) => count + 0.2);
+        }
+        // default response for rate limiting was 503 and known is 429
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        return ValueTask.CompletedTask;
+    };
+});
+
+// Reset violation count after a period (e.g., 1 hour) to prevent memory leak from long-lived clients
+var cleanupTimer = new Timer(
+    _ =>
+    {
+        violationTracker.Clear();
+    },
+    null,
+    TimeSpan.FromHours(1),
+    TimeSpan.FromHours(1)
+);
+
+////////////////////////////////////////////////////////////////////////////////////////////
 // build app
+
 var app = builder.Build();
+
+app.UseRateLimiter();
 app.UseExceptionHandler(errorApp =>
 {
     errorApp.Run(async context =>
