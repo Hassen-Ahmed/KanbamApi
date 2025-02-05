@@ -4,6 +4,7 @@ using KanbamApi.Util.Validators;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using MongoDB.Driver.Linq;
 
 namespace KanbamApi.Controllers;
@@ -11,6 +12,7 @@ namespace KanbamApi.Controllers;
 [Authorize]
 [ApiController]
 [Route("api/[controller]")]
+[EnableRateLimiting("FixedWindow")]
 public class UsersController : ControllerBase
 {
     private readonly UserManager<ApplicationUser> _userManager;
