@@ -7,12 +7,14 @@ using KanbamApi.Util;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Stripe;
 using Stripe.Checkout;
 
 [Authorize]
 [ApiController]
 [Route("api/payment")]
+[EnableRateLimiting("SlidingWindowStrictPolicy")]
 public class PaymentController : ControllerBase
 {
     private readonly IKanbamDbContext _kanbamDbContext;
