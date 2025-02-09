@@ -136,6 +136,17 @@ builder.Services.Configure<DataProtectionTokenProviderOptions>(opt =>
     opt.TokenLifespan = TimeSpan.FromMinutes(30);
 });
 
+// HttpClient
+builder.Services.AddHttpClient();
+
+builder.Services.AddSingleton<ICloudFlareTurnstileService>(ServiceProvider =>
+{
+    var secretKey = DotNetEnv.Env.GetString("CLOUDFLARE_TURNSTILE_SECRET_KEY");
+    var httpClientFactory = ServiceProvider.GetRequiredService<IHttpClientFactory>();
+
+    return new CloudFlareTurnstileService(httpClientFactory, secretKey);
+});
+
 // Authentication service
 builder
     .Services.AddAuthentication(

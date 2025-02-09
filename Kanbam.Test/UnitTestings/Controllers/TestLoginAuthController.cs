@@ -16,9 +16,9 @@ public class TestLoginAuthController : TestBase
 {
     private readonly Mock<UserManager<ApplicationUser>> _userManagerMock;
     private readonly Mock<ITokenService> _tokenServiceMock;
-    private readonly Mock<HttpContext> _mockHttpContext;
     private readonly Mock<HttpResponse> _mockHttpResponse;
     private readonly Mock<IResponseCookies> _mockResponseCookies;
+    private readonly Mock<ICloudFlareTurnstileService> _cloudFlareTurnstileService;
     private readonly AuthController _authController;
 
     public TestLoginAuthController()
@@ -35,13 +35,14 @@ public class TestLoginAuthController : TestBase
             null!,
             null!
         );
+        _cloudFlareTurnstileService = new Mock<ICloudFlareTurnstileService>();
         _authController = new AuthController(
             _userManagerMock.Object,
             _tokenServiceMock.Object,
-            null!
+            null!,
+            _cloudFlareTurnstileService.Object
         );
 
-        _mockHttpContext = new Mock<HttpContext>();
         _mockHttpResponse = new Mock<HttpResponse>();
         _mockResponseCookies = new Mock<IResponseCookies>();
     }
@@ -58,12 +59,19 @@ public class TestLoginAuthController : TestBase
             UserName = validUser.Email.Split("@").FirstOrDefault()
         };
 
+        var defaultHttpContext = new DefaultHttpContext();
+        defaultHttpContext.Connection.RemoteIpAddress = System.Net.IPAddress.Parse("127.0.0.1");
+
         _mockHttpResponse.Setup(r => r.Cookies).Returns(_mockResponseCookies.Object);
-        _mockHttpContext.Setup(c => c.Response).Returns(_mockHttpResponse.Object);
+
         _authController.ControllerContext = new ControllerContext
         {
-            HttpContext = _mockHttpContext.Object
+            HttpContext = defaultHttpContext
         };
+
+        _cloudFlareTurnstileService
+            .Setup(cf => cf.VerifyTokenAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(true);
 
         _userManagerMock.Setup(um => um.FindByEmailAsync(It.IsAny<string>())).ReturnsAsync(user);
 
@@ -87,6 +95,20 @@ public class TestLoginAuthController : TestBase
     {
         // Assign
         UserLogin inValidUser = UserLoginFixture.InValidUser();
+
+        var defaultHttpContext = new DefaultHttpContext();
+        defaultHttpContext.Connection.RemoteIpAddress = System.Net.IPAddress.Parse("127.0.0.1");
+        _mockHttpResponse.Setup(r => r.Cookies).Returns(_mockResponseCookies.Object);
+
+        _authController.ControllerContext = new ControllerContext
+        {
+            HttpContext = defaultHttpContext
+        };
+
+        _cloudFlareTurnstileService
+            .Setup(cf => cf.VerifyTokenAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(true);
+
         _userManagerMock
             .Setup(a => a.FindByEmailAsync(It.IsAny<string>()))
             .ReturnsAsync((ApplicationUser)null!);
@@ -106,6 +128,20 @@ public class TestLoginAuthController : TestBase
     {
         // Assign
         UserLogin validUser = UserLoginFixture.ValidUser();
+
+        var defaultHttpContext = new DefaultHttpContext();
+        defaultHttpContext.Connection.RemoteIpAddress = System.Net.IPAddress.Parse("127.0.0.1");
+        _mockHttpResponse.Setup(r => r.Cookies).Returns(_mockResponseCookies.Object);
+
+        _authController.ControllerContext = new ControllerContext
+        {
+            HttpContext = defaultHttpContext
+        };
+
+        _cloudFlareTurnstileService
+            .Setup(cf => cf.VerifyTokenAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(true);
+
         _userManagerMock
             .Setup(a => a.FindByEmailAsync(It.IsAny<string>()))
             .ReturnsAsync((ApplicationUser)null!);
@@ -118,10 +154,24 @@ public class TestLoginAuthController : TestBase
     }
 
     [Fact]
-    public async Task Login_OnWrongPasswordHash_Return_4400_BadRequest()
+    public async Task Login_OnWrongPasswordHash_Return_400_BadRequest()
     {
         // Assign
         UserLogin validUser = UserLoginFixture.ValidUser();
+
+        var defaultHttpContext = new DefaultHttpContext();
+        defaultHttpContext.Connection.RemoteIpAddress = System.Net.IPAddress.Parse("127.0.0.1");
+        _mockHttpResponse.Setup(r => r.Cookies).Returns(_mockResponseCookies.Object);
+
+        _authController.ControllerContext = new ControllerContext
+        {
+            HttpContext = defaultHttpContext
+        };
+
+        _cloudFlareTurnstileService
+            .Setup(cf => cf.VerifyTokenAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(Task.FromResult(true));
+
         _userManagerMock
             .Setup(a => a.FindByEmailAsync(It.IsAny<string>()))
             .ReturnsAsync((ApplicationUser)null!);
@@ -141,6 +191,20 @@ public class TestLoginAuthController : TestBase
     {
         // Assign
         UserLogin validUser = UserLoginFixture.ValidUser();
+
+        var defaultHttpContext = new DefaultHttpContext();
+        defaultHttpContext.Connection.RemoteIpAddress = System.Net.IPAddress.Parse("127.0.0.1");
+        _mockHttpResponse.Setup(r => r.Cookies).Returns(_mockResponseCookies.Object);
+
+        _authController.ControllerContext = new ControllerContext
+        {
+            HttpContext = defaultHttpContext
+        };
+
+        _cloudFlareTurnstileService
+            .Setup(cf => cf.VerifyTokenAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(Task.FromResult(true));
+
         _userManagerMock
             .Setup(a => a.FindByEmailAsync(It.IsAny<string>()))
             .ReturnsAsync((ApplicationUser)null!);

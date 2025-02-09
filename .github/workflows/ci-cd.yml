@@ -81,6 +81,8 @@ jobs:
           echo "STRIPE_SECRET_KEY=${{secrets.STRIPE_SECRET_KEY}}" >> $GITHUB_ENV
           echo "STRIPE_WEBHOOK_SECRET_KEY=${{secrets.STRIPE_WEBHOOK_SECRET_KEY}}" >> $GITHUB_ENV
 
+          echo "CLOUDFLARE_TURNSTILE_SECRET_KEY=${{secrets.CLOUDFLARE_TURNSTILE_SECRET_KEY}}" >> $GITHUB_ENV
+
       - name: Run Tests
         working-directory: Kanbam.Test
         run: dotnet test --verbosity normal

@@ -35,6 +35,7 @@ public class TestRegisterAuthController : TestBase
         _authController = new AuthController(
             _userManagerMock.Object,
             _tokenServiceMock.Object,
+            null!,
             null!
         );
     }
