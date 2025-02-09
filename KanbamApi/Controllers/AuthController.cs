@@ -19,16 +19,19 @@ public class AuthController : ControllerBase
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ITokenService _tokenService;
     private readonly IEmailService _emailService;
+    private readonly ICloudFlareTurnstileService _cloudFlareTurnstileService;
 
     public AuthController(
         UserManager<ApplicationUser> userManager,
         ITokenService tokenService,
-        IEmailService emailService
+        IEmailService emailService,
+        ICloudFlareTurnstileService cloudFlareTurnstileService
     )
     {
         _userManager = userManager;
         _tokenService = tokenService;
         _emailService = emailService;
+        _cloudFlareTurnstileService = cloudFlareTurnstileService;
     }
 
     [HttpPost(ApiRoutesAuth.Register)]
@@ -63,6 +66,14 @@ public class AuthController : ControllerBase
     [HttpPost(ApiRoutesAuth.Login)]
     public async Task<IActionResult> Login([FromBody] UserLogin userLogin)
     {
+        var turnstileCaptcha = await _cloudFlareTurnstileService.VerifyTokenAsync(
+            userLogin.Token,
+            Request.HttpContext.Connection.RemoteIpAddress?.ToString()!
+        );
+
+        if (!turnstileCaptcha)
+            return BadRequest(new { Message = "Wrong CAPTCHA token!" });
+
         // validate userLogin
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
